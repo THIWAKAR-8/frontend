@@ -5,6 +5,7 @@ const WS_URL = "wss://smart-spoon-backend.onrender.com/ws";
 export default function App() {
   const [status, setStatus] = useState("Connecting...");
   const [isLive, setIsLive] = useState(false);
+  const [rawMessage, setRawMessage] = useState("Waiting for first WebSocket packet...");
   const [telemetry, setTelemetry] = useState({
     adulteration_type: "Connecting...",
     safety_score: 0,
@@ -28,6 +29,8 @@ export default function App() {
 
       ws.onmessage = (event) => {
         try {
+          // Display the exact raw string on the page for deployment verification
+          setRawMessage(event.data);
           const data = JSON.parse(event.data);
           setTelemetry(data);
         } catch (err) {
@@ -57,6 +60,17 @@ export default function App() {
 
   return (
     <div style={{ background: '#0a0f1d', color: '#fff', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
+      
+      {/* --- LIVE DEPLOYMENT & WEBSOCKET DEBUG BANNER --- */}
+      <div style={{ background: '#1e1b4b', border: '1px solid #4338ca', padding: '12px 20px', borderRadius: '8px', marginBottom: '20px' }}>
+        <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#818cf8', fontWeight: 'bold' }}>
+          🛠️ LIVE GITHUB/VERCEL DEPLOYMENT CHECKER:
+        </p>
+        <p style={{ margin: 0, fontSize: '13px', fontFamily: 'monospace', color: '#c7d2fe' }}>
+          Raw WS Packet: {rawMessage}
+        </p>
+      </div>
+
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '15px' }}>
         <h2>Smart Spoon AI <span style={{ fontSize: '12px', color: '#38bdf8' }}>REAL-TIME TELEMETRY & ADULTERATION METROLOGY</span></h2>
         <div>
@@ -81,8 +95,8 @@ export default function App() {
           </div>
           <div style={{ textAlign: 'center', background: '#1f2937', padding: '20px', borderRadius: '12px', minWidth: '150px' }}>
             <p style={{ color: '#9ca3af', fontSize: '12px' }}>AI CONFIDENCE</p>
-            <h2 style={{ color: '#38bdf8', margin: '5px 0' }}>{telemetry.confidence.toFixed(1)}%</h2>
-            <p style={{ color: '#6b7280', fontSize: '11px' }}>FREQ: {telemetry.frequency.toFixed(0)} Hz</p>
+            <h2 style={{ color: '#38bdf8', margin: '5px 0' }}>{telemetry.confidence ? telemetry.confidence.toFixed(1) : 0}%</h2>
+            <p style={{ color: '#6b7280', fontSize: '11px' }}>FREQ: {telemetry.frequency ? telemetry.frequency.toFixed(0) : 0} Hz</p>
           </div>
         </div>
 
@@ -95,7 +109,7 @@ export default function App() {
             <p style={{ color: '#9ca3af', fontSize: '14px' }}>LIVE PH LEVEL & TEMP</p>
             <h2 style={{ color: '#38bdf8', margin: '15px 0' }}>pH: {telemetry.ph} | Temp: {telemetry.temperature}°C</h2>
             <div style={{ background: '#374151', height: '10px', borderRadius: '5px', overflow: 'hidden', marginTop: '10px' }}>
-              <div style={{ width: `${(telemetry.ph / 14) * 100}%`, background: '#10b981', height: '100%' }}></div>
+              <div style={{ width: `${((telemetry.ph || 7) / 14) * 100}%`, background: '#10b981', height: '100%' }}></div>
             </div>
           </div>
         </div>
