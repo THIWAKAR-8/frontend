@@ -20,7 +20,7 @@ import {
 // ============================================================================
 // THE FIX: URL NOW POINTS TO smart-spoon-backend-ai
 // ============================================================================
-const WS_URL = "wss://smart-spoon-backend-ai.onrender.com/ws";
+const WS_URL = "wss://smart-spoon-backend.onrender.com/ws";
 // ============================================================================
 
 const HISTORY_LEN = 40;
