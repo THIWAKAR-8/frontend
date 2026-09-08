@@ -1,0 +1,245 @@
+/* ============================================================
+   Certificate-of-Analysis layout primitives
+   Shared by HeroVerdict, ConsumerCard, LabTable, TimerCard,
+   EiSChart, AIRadar, SafetyGauge and PHMeter.
+   Color tokens (--paper, --ink, --brass, etc.) live in index.css —
+   this file only holds structure, so it never needs to change
+   when the palette does.
+   ============================================================ */
+
+/* -- Bordered "paper" panels ------------------------------------------ */
+.certificate-frame {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  box-shadow: 0 18px 30px -26px rgba(92, 31, 62, 0.28);
+}
+
+.instrument-panel {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+}
+
+/* -- Corner registration marks (hero panel only — one bold gesture) --- */
+.corner-mark { position: absolute; width: 16px; height: 16px; pointer-events: none; }
+.corner-mark--tl { top: -1px; left: -1px; border-top: 1.5px solid var(--brass); border-left: 1.5px solid var(--brass); }
+.corner-mark--tr { top: -1px; right: -1px; border-top: 1.5px solid var(--brass); border-right: 1.5px solid var(--brass); }
+.corner-mark--bl { bottom: -1px; left: -1px; border-bottom: 1.5px solid var(--brass); border-left: 1.5px solid var(--brass); }
+.corner-mark--br { bottom: -1px; right: -1px; border-bottom: 1.5px solid var(--brass); border-right: 1.5px solid var(--brass); }
+
+@media (max-width: 640px) {
+  .corner-mark { display: none; }
+}
+
+/* -- Ink stamp badge (connection status) ------------------------------- */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1.5px solid currentColor;
+  transform: rotate(-2deg);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.stamp::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* -- Leader-dot rows (laboratory annex tables) -------------------------- */
+.leader-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.leader-row:last-child { border-bottom: none; }
+.leader-label {
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.leader-fill {
+  flex: 1;
+  border-bottom: 1px dotted var(--rule-strong);
+  transform: translateY(-3px);
+  min-width: 8px;
+}
+.leader-value {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--ink);
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* -- Annex tab (small header strip on each LabTable) --------------------- */
+.annex-panel__tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: var(--brass-soft);
+  color: var(--brass-dark);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* -- Consumer findings, numbered as report clauses ------------------------ */
+.clause { border-bottom: 1px solid var(--rule); padding: 16px 0; }
+.clause:last-child { border-bottom: none; }
+.clause__index {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--brass-dark);
+  border: 1px solid var(--brass-dark);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* -- Data plate (timers, kitchen directive) -------------------------------- */
+.data-plate {
+  border: 1px solid var(--rule-strong);
+  background: var(--paper-raised);
+  position: relative;
+}
+.data-plate::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--brass);
+}
+
+/* -- Section headings (roman numeral + running rule) ------------------------ */
+.section-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.section-heading__index {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 22px;
+  color: var(--brass);
+}
+.section-heading__rule {
+  flex: 1;
+  height: 1px;
+  background: var(--rule-strong);
+}
+
+/* -- Graph-paper backdrop for the live EIS trace ----------------------------- */
+.oscilloscope-grid {
+  background-color: var(--paper-raised);
+  background-image:
+    linear-gradient(var(--rule) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ============================================================
+   Ink-blot backdrop
+   ------------------------------------------------------------
+   A handful of soaked stains + fine droplet trails, as if this
+   very certificate had been dye-tested. Two tones only: mulberry
+   (--ink) and kesar (--brass). Fixed behind all content, blended
+   softly into the paper, never interactive. Rendered by
+   components/InkBlots.jsx.
+   ============================================================ */
+.ink-backdrop {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ink-blot {
+  position: absolute;
+  mix-blend-mode: multiply;
+  filter: blur(0.5px);
+}
+.ink-blot--mulberry { background: var(--ink); }
+.ink-blot--kesar { background: var(--brass); }
+
+.ink-blot--a {
+  top: -120px; left: -100px;
+  width: 380px; height: 340px;
+  opacity: 0.05;
+  border-radius: 42% 58% 65% 35% / 45% 38% 62% 55%;
+  transform: rotate(-14deg);
+}
+.ink-blot--b {
+  top: 28%; right: -140px;
+  width: 420px; height: 380px;
+  opacity: 0.045;
+  border-radius: 55% 45% 40% 60% / 50% 60% 40% 50%;
+  transform: rotate(21deg);
+}
+.ink-blot--c {
+  bottom: -110px; left: 10%;
+  width: 300px; height: 260px;
+  opacity: 0.04;
+  border-radius: 60% 40% 55% 45% / 42% 55% 45% 58%;
+  transform: rotate(6deg);
+}
+.ink-blot--d {
+  bottom: 10%; right: 6%;
+  width: 150px; height: 130px;
+  opacity: 0.06;
+  border-radius: 58% 42% 48% 52% / 55% 45% 55% 45%;
+}
+
+.ink-droplets circle { fill: currentColor; }
+.ink-droplets--a { position: absolute; top: 40px; left: 220px; color: var(--ink); opacity: 0.09; }
+.ink-droplets--b { position: absolute; bottom: 150px; right: 240px; color: var(--brass); opacity: 0.1; }
+
+@media (max-width: 640px) {
+  .ink-blot--b, .ink-blot--c { display: none; }
+}
+
+/* -- Certificate download seal (button) --------------------------------- */
+.download-seal {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 22px;
+  border: 1.5px solid var(--brass-dark);
+  background: var(--brass-soft);
+  color: var(--brass-dark);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.download-seal:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px -14px rgba(255, 183, 219, 0.35);
+}
+.download-seal:disabled {
+  opacity: 0.6;
+  cursor: progress;
+  transform: none;
+  box-shadow: none;
+} 
+
+/* -- Print fallback (browser Print → Save as PDF also works) ------------ */
+@media print {
+  .ink-backdrop,
+  .no-print { display: none !important; }
+  body { background: var(--paper); }
+}
