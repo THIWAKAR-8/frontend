@@ -6,7 +6,7 @@ import html2canvas from "html2canvas";
 import InstallApp from './components/InstallApp';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip,
-  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, AreaChart, Area, ScatterChart, Scatter, ZAxis
+  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from "recharts";
 import {
   Wifi, WifiOff, Baby, AlertTriangle, Flame, Activity, Droplet, Coffee, UtensilsCrossed,
@@ -14,13 +14,13 @@ import {
   IndianRupee, Leaf, ShieldCheck, ShieldAlert, Waves, ActivitySquare, Cpu, Download,
   Loader2, Volume2, VolumeX, Eye, Share2, AlertOctagon, HeartPulse, Scale, Shield,
   TrendingDown, DollarSign, Pill, Camera, MessageSquare, Send, Zap, BarChart3, ScanFace,
-  CheckCircle2, RefreshCw, XCircle, Info, Radio, ZapOff, Layers, Terminal
+  CheckCircle2, RefreshCw, XCircle, Info
 } from "lucide-react";
 
 // ============================================================================
 // BACKEND WEBSOCKET CONFIGURATION
 // ============================================================================
-const WS_URL = "wss://smart-spoon-backend-ai.onrender.com/ws";
+const WS_URL = "wss://smart-spoon-backend.onrender.com/ws";
 // ============================================================================
 
 const HISTORY_LEN = 40;
@@ -42,12 +42,7 @@ const GLOBAL_LANGUAGES = [
   { code: "hi", name: "Hindi", nativeName: "हिन्दी", ttsCode: "hi-IN" },
   { code: "ml", name: "Malayalam", nativeName: "മലയാളം", ttsCode: "ml-IN" },
   { code: "te", name: "Telugu", nativeName: "తెలుగు", ttsCode: "te-IN" },
-  { code: "kn", name: "Kannada", nativeName: "ಕನ್ನಡ", ttsCode: "kn-IN" },
-  { code: "bn", name: "Bengali", nativeName: "বাংলা", ttsCode: "bn-IN" },
-  { code: "mr", name: "Marathi", nativeName: "मराठी", ttsCode: "mr-IN" },
-  { code: "gu", name: "Gujarati", nativeName: "ગુજરાતી", ttsCode: "gu-IN" },
-  { code: "pa", name: "Punjabi", nativeName: "ਪੰਜਾਬੀ", ttsCode: "pa-IN" },
-  { code: "ur", name: "Urdu", nativeName: "اردو", ttsCode: "ur-PK" }
+  { code: "kn", name: "Kannada", nativeName: "ಕನ್ನಡ", ttsCode: "kn-IN" }
 ];
 
 const INTERNAL_DICTIONARY = {
@@ -247,26 +242,24 @@ export default function App() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [statusToast, setStatusToast] = useState(null);
 
-  // A11y
+  // A11y & Settings
   const [dyslexicFont, setDyslexicFont] = useState(false);
   const [fontSizeMultiplier, setFontSizeMultiplier] = useState(1);
   const [highContrast, setHighContrast] = useState(false);
   const [voiceActive, setVoiceActive] = useState(false);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
 
-  // Medical & CV states
-  const [pregnancyMode, setPregnancyMode] = useState(false);
+  // Lab & Chat States
   const [labImage, setLabImage] = useState(null);
   const [labResults, setLabResults] = useState(null);
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
   const visionCanvasRef = useRef(null);
 
-  // LLM Chat
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState([
     {
       sender: "bot",
-      text: "Smart Spoon Neural Ensemble initialized. Connected to Random Forest & Gradient Boosting inference pipeline. Ask me anything regarding milk safety, dielectric impedance, or FSSAI compliance."
+      text: "Smart Spoon Neural Ensemble initialized. Connected to Random Forest & Gradient Boosting inference pipeline."
     }
   ]);
   const chatScrollRef = useRef(null);
@@ -412,12 +405,9 @@ export default function App() {
       const q = query.toLowerCase();
       let reply = `Neural Ensemble active. Current verdict: ${hero.adulteration_type}.`;
       if (q.includes("urea")) {
-        reply = "Urea increases apparent nitrogen content. Our ESP32 dual-frequency EIS probe detects this via ionic relaxation shifts in the 1kHz–10kHz band.";
-      } else if (q.includes("fssai") || q.includes("act")) {
-        reply = "Under FSSAI 2011 regulations, cow milk must have min 3.2% Fat and 8.3% SNF. Synthetic adulterants violate Section 59 punishable by imprisonment.";
-      } else if (q.includes("safe") || q.includes("drink")) {
-        const score = firstNumber(primary["1_safety_score"], 85);
-        reply = score > 75 ? "Safety index is high. Sample is approved for consumption." : "CRITICAL WARNING: Adulteration biomarkers exceed safe consumption thresholds.";
+        reply = "Urea increases apparent nitrogen content. Our ESP32 dual-frequency EIS probe detects this via ionic relaxation shifts.";
+      } else if (q.includes("fssai")) {
+        reply = "Under FSSAI 2011 regulations, cow milk must have min 3.2% Fat and 8.3% SNF.";
       }
       setChatHistory((prev) => [...prev, { sender: "bot", text: reply }]);
       if (voiceActive) speak(reply);
@@ -440,10 +430,8 @@ export default function App() {
 
   const phValue = firstNumber(primary["21_REAL_TIME_PH_METER"], 6.65);
   const safetyScore = firstNumber(primary["1_safety_score"], 94);
-  const waterPct = firstNumber(primary["16_water_adulteration_pct"], 0);
-  const penaltyINR = firstNumber(primary["19_fraud_loss_penalty_inr"], 0);
-  const monthlyLoss = Math.round(penaltyINR * 30);
-  const trueMarketPrice = Math.max(0, 60 - penaltyINR).toFixed(2);
+  const monthlyLoss = Math.round(firstNumber(primary["19_fraud_loss_penalty_inr"], 0) * 30);
+  const trueMarketPrice = Math.max(0, 60 - firstNumber(primary["19_fraud_loss_penalty_inr"], 0)).toFixed(2);
   const safetyColor = safetyScore >= 80 ? "#10b981" : safetyScore >= 50 ? "#f59e0b" : "#ef4444";
 
   return (
@@ -456,7 +444,6 @@ export default function App() {
         fontSize: `${fontSizeMultiplier}rem`
       }}
     >
-      {/* Background Cyber Grid */}
       {!highContrast && (
         <>
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-cyan-600/10 rounded-full blur-[140px] pointer-events-none -z-10" />
@@ -464,7 +451,6 @@ export default function App() {
         </>
       )}
 
-      {/* Floating Status Toast */}
       {statusToast && (
         <div className={`fixed top-24 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-xl border backdrop-blur-md shadow-2xl ${
           statusToast.type === "success" ? "bg-emerald-950/90 border-emerald-500/50 text-emerald-200" : "bg-rose-950/90 border-rose-500/50 text-rose-200"
@@ -474,7 +460,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Header */}
       <header className={`sticky top-0 z-40 border-b backdrop-blur-xl ${
         highContrast ? "bg-black border-white" : "bg-slate-950/80 border-slate-800/80"
       }`}>
@@ -527,7 +512,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-6 mt-6 mb-6 flex flex-wrap gap-2 border-b border-slate-800/80 pb-2">
         {[
           { id: "telemetry", icon: ActivitySquare, label: t.tab_telemetry },
@@ -551,11 +535,9 @@ export default function App() {
         ))}
       </div>
 
-      {/* Main Body */}
       <main className="max-w-7xl mx-auto px-6">
         {activeTab === "telemetry" && (
           <div className="space-y-8">
-            {/* Presentation Hero Banner */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={hero.adulteration_type}
@@ -639,7 +621,6 @@ export default function App() {
               </motion.div>
             </AnimatePresence>
 
-            {/* Consumer Intelligence Metrology */}
             <section>
               <div className="flex items-center gap-3 mb-5">
                 <ActivitySquare className="w-5 h-5 text-cyan-400" />
@@ -707,7 +688,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Kitchen Directive */}
               <div className="rounded-2xl border border-cyan-500/30 bg-cyan-950/25 backdrop-blur-xl p-5 mb-6 flex items-center gap-4 shadow-xl">
                 <div className="p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/30 text-cyan-400">
                   <ClipboardCheck className="w-6 h-6" />
@@ -718,7 +698,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Telemetry Metrics Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {Object.entries(primary).map(([k, val]) => {
                   if (["11_kitchen_directive", "1_safety_score", "21_REAL_TIME_PH_METER"].some(x => k.includes(x)) || k.includes("timer")) return null;
@@ -737,7 +716,6 @@ export default function App() {
               </div>
             </section>
 
-            {/* Deep Technical Diagnostics */}
             <section className="pt-4">
               <div className="flex items-center gap-3 mb-5">
                 <FlaskConical className="w-5 h-5 text-cyan-400" />
@@ -790,7 +768,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ======================================================================= */}
         {activeTab === "health" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -829,7 +806,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ======================================================================= */}
         {activeTab === "vision" && (
           <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 p-8 shadow-xl">
             <div className="flex items-center gap-3 mb-6">
@@ -899,7 +875,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ======================================================================= */}
         {activeTab === "assistant" && (
           <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 h-[620px] flex flex-col overflow-hidden shadow-2xl backdrop-blur-xl">
             <div className="bg-slate-950 p-4 border-b border-slate-800 flex items-center gap-3">
@@ -945,7 +920,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ======================================================================= */}
         {activeTab === "settings" && (
           <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 p-8 shadow-xl max-w-2xl mx-auto">
             <h3 className="text-base font-bold text-white mb-6">Accessibility & Sensory Engine</h3>
@@ -984,7 +958,6 @@ export default function App() {
         )}
       </main>
 
-      {/* Hidden DOM Certificate for html2canvas export */}
       <div style={{ position: "fixed", top: 0, left: 0, zIndex: -50, opacity: 0, pointerEvents: "none" }}>
         <div ref={certificateRef} className="w-[1000px] h-[750px] bg-white p-12 text-slate-950 font-sans border-[16px] border-slate-900 flex flex-col justify-between">
           <div className="flex justify-between items-end border-b-4 border-cyan-600 pb-6">
