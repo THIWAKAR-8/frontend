@@ -11,7 +11,7 @@ import {
   Wifi, WifiOff, Activity, Cpu, Download, Volume2, VolumeX, Eye, Share2,
   HeartPulse, Scale, TrendingDown, DollarSign, Pill, Camera, MessageSquare, Send,
   Zap, BarChart3, ScanFace, CheckCircle2, XCircle, ClipboardCheck, FlaskConical, 
-  ActivitySquare, ShieldCheck, ShieldAlert, Milk, Leaf, Droplets, UploadCloud
+  ActivitySquare, ShieldCheck, ShieldAlert, Milk, Leaf, Droplets, UploadCloud, Loader2
 } from "lucide-react";
 
 // ============================================================================
@@ -228,55 +228,77 @@ export default function App() {
     if (!labImage || !visionCanvasRef.current) return;
     setIsAnalyzingImage(true);
     const canvas = visionCanvasRef.current;
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-    img.crossOrigin = "anonymous";
     
+    // willReadFrequently for better canvas performance
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const img = new Image();
+    
+    // Removed crossOrigin to avoid local base64 blocking
     img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0, img.width, img.height);
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imgData.data;
+      try {
+        // PERFORMANCE FIX: Scale huge camera photos down to a fast 150px thumbnail
+        const MAX_SIZE = 150;
+        const scale = Math.min(MAX_SIZE / img.width, MAX_SIZE / img.height, 1);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
 
-      let rT = 0, gT = 0, bT = 0;
-      const count = canvas.width * canvas.height;
-      for (let i = 0; i < data.length; i += 4) {
-        rT += data[i];
-        gT += data[i + 1];
-        bT += data[i + 2];
-      }
-      const r = Math.round(rT / count);
-      const g = Math.round(gT / count);
-      const b = Math.round(bT / count);
-      const brightness = (r + g + b) / 3;
+        let rT = 0, gT = 0, bT = 0;
+        let pixelCount = 0;
 
-      let verdict = "Unknown Sample";
-      let alertLevel = "safe";
+        // Loop through the tiny, optimized canvas
+        for (let i = 0; i < data.length; i += 4) {
+          rT += data[i];
+          gT += data[i + 1];
+          bT += data[i + 2];
+          pixelCount++;
+        }
+        
+        const r = Math.round(rT / pixelCount);
+        const g = Math.round(gT / pixelCount);
+        const b = Math.round(bT / pixelCount);
+        const brightness = (r + g + b) / 3;
 
-      // Simple RGB heuristics for demonstration
-      if (r > 200 && g > 200 && b > 200) {
-        verdict = "Pure Milk Suspend Detected (High White Reflectance)";
-        alertLevel = "safe";
-      } else if (r > g + 20 && r > b + 40) {
-        verdict = "Apple / Fruit Extract Detected (Red/Yellow Dominant)";
-        alertLevel = "safe";
-      } else if (b > r + 15 && b > g + 10) {
-        verdict = "Water / Dilution Signature (High Cyan Scattering)";
-        alertLevel = "danger";
-      } else if (brightness < 100) {
-        verdict = "Suspended Particulate / Turbidity Anomaly Detected";
-        alertLevel = "warning";
-      } else {
-        verdict = "Mixed/Unknown Biological Matrix";
-        alertLevel = "warning";
-      }
+        let verdict = "Unknown Sample";
+        let alertLevel = "safe";
 
-      setTimeout(() => {
-        setLabResults({ r, g, b, verdict, alertLevel });
+        // Spectrophotometry RGB Heuristics
+        if (r > 200 && g > 200 && b > 200) {
+          verdict = "Pure Milk Suspend Detected (High White Reflectance)";
+          alertLevel = "safe";
+        } else if (r > g + 20 && r > b + 40) {
+          verdict = "Apple / Fruit Extract Detected (Red/Yellow Dominant)";
+          alertLevel = "safe";
+        } else if (b > r + 15 && b > g + 10) {
+          verdict = "Water / Dilution Signature (High Cyan Scattering)";
+          alertLevel = "danger";
+        } else if (brightness < 100) {
+          verdict = "Suspended Particulate / Turbidity Anomaly Detected";
+          alertLevel = "warning";
+        } else {
+          verdict = "Mixed/Unknown Biological Matrix";
+          alertLevel = "warning";
+        }
+
+        setTimeout(() => {
+          setLabResults({ r, g, b, verdict, alertLevel });
+          setIsAnalyzingImage(false);
+        }, 1200); // Dramatic pause for presentation effect
+
+      } catch (err) {
+        console.error("Canvas Execution Error:", err);
         setIsAnalyzingImage(false);
-      }, 1200); // Dramatic pause for presentation effect
+      }
     };
+
+    img.onerror = () => {
+      console.error("Image loading failed.");
+      setIsAnalyzingImage(false);
+    };
+
     img.src = labImage;
   };
 
@@ -632,7 +654,7 @@ export default function App() {
                     <p className="text-[11px] text-slate-400">Calculated over 1.0L daily household consumption</p>
                   </div>
                 </div>
-                <div className="text-5xl font-black text-white mb-2 tabular-nums">₹{monthlyLoss}</div>
+                <div className="text-5xl font-black text-white mb-2 tabular-nums">₹{Math.round(firstNumber(primary["19_fraud_loss_penalty_inr"], 0) * 30)}</div>
                 <p className="text-xs text-slate-400 leading-relaxed">
                   Financial capital lost paying pure dairy rates for water dilution and synthetic surfactant admixtures.
                 </p>
@@ -648,7 +670,7 @@ export default function App() {
                     <p className="text-[11px] text-slate-400">Calibrated against missing Solids-Not-Fat (SNF)</p>
                   </div>
                 </div>
-                <div className="text-5xl font-black text-white mb-2 tabular-nums">₹{trueMarketPrice} / L</div>
+                <div className="text-5xl font-black text-white mb-2 tabular-nums">₹{Math.max(0, 60 - firstNumber(primary["19_fraud_loss_penalty_inr"], 0)).toFixed(2)} / L</div>
                 <p className="text-xs text-slate-400 leading-relaxed">
                   Equitable market valuation computed directly from active impedance and density vectors.
                 </p>
