@@ -10,7 +10,8 @@ import {
 import {
   Wifi, WifiOff, Activity, Cpu, Download, Volume2, VolumeX, Eye, Share2,
   HeartPulse, Scale, TrendingDown, DollarSign, Pill, Camera, MessageSquare, Send,
-  Zap, BarChart3, ScanFace, CheckCircle2, XCircle, ClipboardCheck, FlaskConical, ActivitySquare, ShieldCheck, ShieldAlert, Milk, Leaf, Droplets
+  Zap, BarChart3, ScanFace, CheckCircle2, XCircle, ClipboardCheck, FlaskConical, 
+  ActivitySquare, ShieldCheck, ShieldAlert, Milk, Leaf, Droplets, UploadCloud
 } from "lucide-react";
 
 // ============================================================================
@@ -72,8 +73,8 @@ function parseProbabilityDistribution(raw) {
     return [
       { name: "Pure Milk", value: 92.4 },
       { name: "Water Dilution", value: 4.1 },
-      { name: "Urea Admixture", value: 2.2 },
-      { name: "Synthetic Detergent", value: 1.3 }
+      { name: "Apple Extract", value: 2.2 },
+      { name: "Detergent", value: 1.3 }
     ];
   }
   try {
@@ -100,13 +101,6 @@ function firstNumber(raw, fallback = 0) {
   return match ? parseFloat(match[0]) : fallback;
 }
 
-function cleanLabel(key) {
-  return String(key)
-    .replace(/^\d+_/, "")
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 export default function App() {
   const [hero, setHero] = useState({ adulteration_type: "Connecting Neural Link…", accuracy: 0, status_color: "#334155" });
   const [primary, setPrimary] = useState({});
@@ -118,9 +112,16 @@ export default function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionState, setConnectionState] = useState("CONNECTING");
 
-  // NEW: Target Object Profile Selector State
+  // Target Object Profile Selector State
   const [targetProfile, setTargetProfile] = useState("milk");
 
+  // Optical CV Lab States
+  const [labImage, setLabImage] = useState(null);
+  const [labResults, setLabResults] = useState(null);
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
+  const visionCanvasRef = useRef(null);
+
+  // Chatbot States
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState([
     {
@@ -132,6 +133,7 @@ export default function App() {
 
   const t = useMemo(() => INTERNAL_DICTIONARY[lang] || INTERNAL_DICTIONARY.en, [lang]);
 
+  // WebSocket Connection
   useEffect(() => {
     let ws;
     let reconnectTimer;
@@ -207,6 +209,76 @@ export default function App() {
   useEffect(() => {
     chatScrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory]);
+
+  // ============================================================================
+  // CAMERA & FILE UPLOAD LOGIC
+  // ============================================================================
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setLabImage(event.target?.result);
+      setLabResults(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const executeOpticalAnalysis = () => {
+    if (!labImage || !visionCanvasRef.current) return;
+    setIsAnalyzingImage(true);
+    const canvas = visionCanvasRef.current;
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0, img.width, img.height);
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imgData.data;
+
+      let rT = 0, gT = 0, bT = 0;
+      const count = canvas.width * canvas.height;
+      for (let i = 0; i < data.length; i += 4) {
+        rT += data[i];
+        gT += data[i + 1];
+        bT += data[i + 2];
+      }
+      const r = Math.round(rT / count);
+      const g = Math.round(gT / count);
+      const b = Math.round(bT / count);
+      const brightness = (r + g + b) / 3;
+
+      let verdict = "Unknown Sample";
+      let alertLevel = "safe";
+
+      // Simple RGB heuristics for demonstration
+      if (r > 200 && g > 200 && b > 200) {
+        verdict = "Pure Milk Suspend Detected (High White Reflectance)";
+        alertLevel = "safe";
+      } else if (r > g + 20 && r > b + 40) {
+        verdict = "Apple / Fruit Extract Detected (Red/Yellow Dominant)";
+        alertLevel = "safe";
+      } else if (b > r + 15 && b > g + 10) {
+        verdict = "Water / Dilution Signature (High Cyan Scattering)";
+        alertLevel = "danger";
+      } else if (brightness < 100) {
+        verdict = "Suspended Particulate / Turbidity Anomaly Detected";
+        alertLevel = "warning";
+      } else {
+        verdict = "Mixed/Unknown Biological Matrix";
+        alertLevel = "warning";
+      }
+
+      setTimeout(() => {
+        setLabResults({ r, g, b, verdict, alertLevel });
+        setIsAnalyzingImage(false);
+      }, 1200); // Dramatic pause for presentation effect
+    };
+    img.src = labImage;
+  };
 
   // ============================================================================
   // FRONTEND DYNAMIC RULE ENGINE: Overrides display based on selected object
@@ -310,6 +382,7 @@ export default function App() {
         {[
           { id: "telemetry", icon: ActivitySquare, label: "Neural Telemetry" },
           { id: "health", icon: HeartPulse, label: "Clinical Bio-Grid" },
+          { id: "vision", icon: ScanFace, label: "Optical CV Lab" },
           { id: "assistant", icon: MessageSquare, label: "LLM Biosensor Agent" }
         ].map((tab) => (
           <button
@@ -329,10 +402,12 @@ export default function App() {
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-6">
+        
+        {/* ======================= TAB 1: TELEMETRY ======================= */}
         {activeTab === "telemetry" && (
           <div className="space-y-8">
 
-            {/* NEW TARGET PROFILE SELECTOR */}
+            {/* TARGET PROFILE SELECTOR */}
             <div className="flex flex-col gap-3 mb-6">
               <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">Select Target Matrix to Test Purity:</div>
               <div className="flex flex-wrap gap-4">
@@ -543,7 +618,136 @@ export default function App() {
           </div>
         )}
 
-        {/* Other tabs remain identical... */}
+        {/* ======================= TAB 2: HEALTH ======================= */}
+        {activeTab === "health" && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 p-8 shadow-xl">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-rose-500/20 rounded-2xl flex items-center justify-center border border-rose-500/30 text-rose-400">
+                    <TrendingDown className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black uppercase tracking-widest text-rose-400">Monthly Economic Fraud Impact</h3>
+                    <p className="text-[11px] text-slate-400">Calculated over 1.0L daily household consumption</p>
+                  </div>
+                </div>
+                <div className="text-5xl font-black text-white mb-2 tabular-nums">₹{monthlyLoss}</div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Financial capital lost paying pure dairy rates for water dilution and synthetic surfactant admixtures.
+                </p>
+              </div>
+
+              <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 p-8 shadow-xl">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center border border-emerald-500/30 text-emerald-400">
+                    <DollarSign className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black uppercase tracking-widest text-emerald-400">True Fair Market Value</h3>
+                    <p className="text-[11px] text-slate-400">Calibrated against missing Solids-Not-Fat (SNF)</p>
+                  </div>
+                </div>
+                <div className="text-5xl font-black text-white mb-2 tabular-nums">₹{trueMarketPrice} / L</div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Equitable market valuation computed directly from active impedance and density vectors.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ======================= TAB 3: OPTICAL CV LAB (CAMERA) ======================= */}
+        {activeTab === "vision" && (
+          <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 p-8 shadow-xl">
+            <div className="flex items-center gap-3 mb-6">
+              <ScanFace className="w-6 h-6 text-cyan-400" />
+              <div>
+                <h3 className="text-lg font-bold text-white">Optical Computer Vision Lab</h3>
+                <p className="text-xs text-slate-400">Analyze samples using your device camera or file upload</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              
+              {/* Camera & Upload Controls */}
+              <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  
+                  {/* Live Camera Button */}
+                  <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-cyan-700/50 border-dashed rounded-3xl cursor-pointer bg-cyan-950/20 hover:bg-cyan-900/40 transition-all group">
+                    <Camera className="w-8 h-8 text-cyan-500 mb-2 group-hover:scale-110 transition-transform" />
+                    <span className="text-sm font-bold text-cyan-100">Live Camera</span>
+                    <span className="text-[10px] text-cyan-400/60 uppercase mt-1">Take a Photo</span>
+                    {/* capture="environment" forces the rear camera to open on mobile devices */}
+                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageUpload} />
+                  </label>
+
+                  {/* Standard File Upload Button */}
+                  <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-slate-700 border-dashed rounded-3xl cursor-pointer bg-slate-950/60 hover:bg-slate-900 transition-all group">
+                    <UploadCloud className="w-8 h-8 text-slate-500 mb-2 group-hover:text-white transition-colors" />
+                    <span className="text-sm font-bold text-slate-300">Upload File</span>
+                    <span className="text-[10px] text-slate-500 uppercase mt-1">From Gallery</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  </label>
+                  
+                </div>
+
+                {labImage && (
+                  <button
+                    onClick={executeOpticalAnalysis}
+                    disabled={isAnalyzingImage}
+                    className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 text-white font-black uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-2 shadow-xl shadow-cyan-950/50"
+                  >
+                    {isAnalyzingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
+                    <span>{isAnalyzingImage ? "Analyzing Vectors…" : "Run Spectrophotometry"}</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Analysis Results */}
+              <div className="bg-slate-950/80 rounded-3xl border border-slate-800 p-6 flex flex-col justify-center">
+                {!labImage ? (
+                  <div className="text-center text-slate-600">
+                    <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                    <p className="text-xs font-bold uppercase tracking-widest">Awaiting Image Capture</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex gap-4 items-center">
+                      <img src={labImage} alt="Sample" className="w-24 h-24 object-cover rounded-2xl border border-slate-700 shadow-lg" />
+                      <div>
+                        <div className="text-xs font-bold text-slate-200">Image Buffer Staged</div>
+                        <div className="text-[11px] text-cyan-400 font-mono">Ready for Pixel Classification</div>
+                      </div>
+                    </div>
+
+                    <canvas ref={visionCanvasRef} className="hidden" />
+
+                    {labResults && (
+                      <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-3">
+                        <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Extracted RGB Vector</div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-center font-mono text-xs text-rose-300">R: {labResults.r}</div>
+                          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center font-mono text-xs text-emerald-300">G: {labResults.g}</div>
+                          <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-center font-mono text-xs text-blue-300">B: {labResults.b}</div>
+                        </div>
+                        <div className={`text-sm font-black pt-2 ${
+                          labResults.alertLevel === 'danger' ? 'text-rose-400' : 
+                          labResults.alertLevel === 'warning' ? 'text-amber-400' : 'text-emerald-400'
+                        }`}>
+                          {labResults.verdict}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ======================= TAB 4: ASSISTANT ======================= */}
         {activeTab === "assistant" && (
           <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 h-[620px] flex flex-col overflow-hidden shadow-2xl backdrop-blur-xl">
             <div className="bg-slate-950 p-4 border-b border-slate-800 flex items-center gap-3">
@@ -578,7 +782,7 @@ export default function App() {
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Inquire on urea adulteration, FSSAI regulations, dielectric dispersion…"
+                  placeholder="Inquire on target matrix, FSSAI regulations, dielectric dispersion…"
                   className="flex-1 bg-slate-900 border border-slate-700 focus:border-cyan-500 rounded-2xl px-5 py-3 text-sm text-white outline-none transition-colors"
                 />
                 <button type="submit" disabled={!chatInput.trim()} className="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 text-white p-3.5 rounded-2xl transition-all shadow-lg">
