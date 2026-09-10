@@ -102,7 +102,7 @@ function firstNumber(raw, fallback = 0) {
 }
 
 export default function App() {
-  const [hero, setHero] = useState({ adulteration_type: "Connecting Neural Link…", accuracy: 0, status_color: "#334155" });
+  const [hero, setHero] = useState({ adulteration_type: "Connecting Neural Link…", accuracy: 0, status_color: "#2e1065" });
   const [primary, setPrimary] = useState({});
   const [secondary, setSecondary] = useState({});
   const [meta, setMeta] = useState({ timestamp: "--", raw_adc: 0, probe_temperature_c: 0, excitation_frequency_hz: 0 });
@@ -294,77 +294,79 @@ export default function App() {
   let dynamicSafetyScore = primary["1_safety_score"] || 0;
   let dynamicPh = primary["21_REAL_TIME_PH_METER"] || 6.7;
 
+  // Updated colors for the Nebula Theme (Teal/Pink/Orange)
   if (liveFreq > 100) {
     if (targetProfile === "milk") {
       if (liveFreq >= 2100 && liveFreq <= 2700) {
-        dynamicHero = { adulteration_type: "Pure Milk / Safe", accuracy: 98.2, status_color: "#10b981" };
+        dynamicHero = { adulteration_type: "Pure Milk / Safe", accuracy: 98.2, status_color: "#2dd4bf" }; // Teal
         dynamicSafetyScore = 96;
         dynamicPh = 6.7;
       } else if (liveFreq < 2100) {
-        dynamicHero = { adulteration_type: "Water Dilution Detected", accuracy: 94.1, status_color: "#ef4444" };
+        dynamicHero = { adulteration_type: "Water Dilution Detected", accuracy: 94.1, status_color: "#ec4899" }; // Pink
         dynamicSafetyScore = 40;
         dynamicPh = 7.0;
       } else {
-        dynamicHero = { adulteration_type: "Chemical / Acid Adulterant", accuracy: 89.4, status_color: "#ef4444" };
+        dynamicHero = { adulteration_type: "Chemical / Acid Adulterant", accuracy: 89.4, status_color: "#e11d48" }; // Dark Pink
         dynamicSafetyScore = 20;
       }
     } else if (targetProfile === "apple") {
       if (liveFreq >= 5500) {
-        dynamicHero = { adulteration_type: "Pure Apple Extract", accuracy: 97.5, status_color: "#10b981" };
+        dynamicHero = { adulteration_type: "Pure Apple Extract", accuracy: 97.5, status_color: "#2dd4bf" };
         dynamicSafetyScore = 98;
         dynamicPh = 4.2;
       } else {
-        dynamicHero = { adulteration_type: "Diluted Apple / Synthetic", accuracy: 91.2, status_color: "#ef4444" };
+        dynamicHero = { adulteration_type: "Diluted Apple / Synthetic", accuracy: 91.2, status_color: "#ec4899" };
         dynamicSafetyScore = 35;
         dynamicPh = 6.0;
       }
     } else if (targetProfile === "water") {
       if (liveFreq >= 1800 && liveFreq <= 2100) {
-        dynamicHero = { adulteration_type: "Standard Pure Water", accuracy: 95.0, status_color: "#3b82f6" };
+        dynamicHero = { adulteration_type: "Standard Pure Water", accuracy: 95.0, status_color: "#38bdf8" }; // Light Blue
         dynamicSafetyScore = 99;
         dynamicPh = 7.0;
       } else {
-        dynamicHero = { adulteration_type: "Contaminated / Hard Water", accuracy: 88.5, status_color: "#f59e0b" };
+        dynamicHero = { adulteration_type: "Contaminated / Hard Water", accuracy: 88.5, status_color: "#fb923c" }; // Orange
         dynamicSafetyScore = 55;
       }
     }
   } else {
-    dynamicHero = { adulteration_type: "Awaiting Sensor Data…", accuracy: 0, status_color: "#334155" };
+    dynamicHero = { adulteration_type: "Awaiting Sensor Data…", accuracy: 0, status_color: "#6b21a8" }; // Purple
     dynamicSafetyScore = 0;
   }
 
-  const isToxic = dynamicHero.status_color === "#dc2626" || dynamicHero.status_color === "#ef4444" || dynamicHero.status_color === "#f59e0b";
-  const safetyColor = dynamicSafetyScore >= 80 ? "#10b981" : dynamicSafetyScore >= 50 ? "#f59e0b" : "#ef4444";
+  const isToxic = dynamicHero.status_color === "#ec4899" || dynamicHero.status_color === "#e11d48" || dynamicHero.status_color === "#fb923c";
+  const safetyColor = dynamicSafetyScore >= 80 ? "#2dd4bf" : dynamicSafetyScore >= 50 ? "#fb923c" : "#ec4899";
   const radarData = useMemo(() => parseProbabilityDistribution(secondary?.ai_and_regulatory_metrology?.["35_Class_Probability_Distribution"]), [secondary]);
 
   return (
-    <div className="min-h-screen font-sans bg-[#020617] text-slate-100 selection:bg-cyan-500/30 relative overflow-hidden pb-16">
+    <div className="min-h-screen font-sans bg-[#090014] text-slate-100 selection:bg-fuchsia-500/30 relative overflow-hidden pb-16">
       
-      {/* Dynamic Background Glows */}
+      {/* Deep Space / Nebula Background Glows */}
       <div 
-        className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full blur-[120px] pointer-events-none transition-colors duration-1000" 
-        style={{ backgroundColor: `${dynamicHero.status_color}15` }} 
+        className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full blur-[140px] pointer-events-none transition-colors duration-1000 opacity-40" 
+        style={{ backgroundColor: `${dynamicHero.status_color}` }} 
       />
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-fuchsia-900/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-15 mix-blend-overlay pointer-events-none" />
 
       {/* Modern Header */}
-      <header className="sticky top-0 z-40 border-b backdrop-blur-2xl bg-[#020617]/70 border-white/5 shadow-sm">
+      <header className="sticky top-0 z-40 border-b backdrop-blur-2xl bg-[#090014]/60 border-purple-500/10 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="absolute inset-0 bg-cyan-500 blur-md opacity-30 rounded-xl animate-pulse" />
-              <div className="relative w-12 h-12 bg-gradient-to-br from-cyan-400 via-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg border border-white/20">
+              <div className="absolute inset-0 bg-fuchsia-500 blur-md opacity-40 rounded-xl animate-pulse" />
+              <div className="relative w-12 h-12 bg-gradient-to-br from-fuchsia-500 via-purple-600 to-indigo-800 rounded-xl flex items-center justify-center shadow-lg border border-white/20">
                 <Cpu className="w-6 h-6 text-white" />
               </div>
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold tracking-tight text-white">{t.app_title}</h1>
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                  ESP32 • AI
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30">
+                  NEBULA • AI
                 </span>
               </div>
-              <p className="text-xs tracking-wider text-slate-400 font-medium mt-0.5">{t.subtitle}</p>
+              <p className="text-xs tracking-wider text-purple-300/70 font-medium mt-0.5">{t.subtitle}</p>
             </div>
           </div>
 
@@ -372,15 +374,15 @@ export default function App() {
             <select
               value={lang}
               onChange={(e) => setLang(e.target.value)}
-              className="bg-white/5 border border-white/10 hover:border-cyan-500/50 text-slate-200 rounded-lg px-3 py-2 text-xs font-semibold uppercase transition-all outline-none cursor-pointer backdrop-blur-md"
+              className="bg-white/5 border border-purple-500/20 hover:border-fuchsia-500/50 text-purple-100 rounded-lg px-3 py-2 text-xs font-semibold uppercase transition-all outline-none cursor-pointer backdrop-blur-md"
             >
               {GLOBAL_LANGUAGES.map((l) => (
-                <option key={l.code} value={l.code} className="bg-slate-900">{l.nativeName}</option>
+                <option key={l.code} value={l.code} className="bg-[#090014] text-white">{l.nativeName}</option>
               ))}
             </select>
             <InstallApp />
             <div className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-xs font-bold tracking-wide uppercase transition-all backdrop-blur-md ${
-              isConnected ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10" : "border-rose-500/30 text-rose-400 bg-rose-500/10 animate-pulse"
+              isConnected ? "border-teal-500/40 text-teal-300 bg-teal-500/10" : "border-pink-500/40 text-pink-400 bg-pink-500/10 animate-pulse"
             }`}>
               {isConnected ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
               <span>{isConnected ? t.live : connectionState === "RECONNECTING" ? t.reconnecting : t.offline}</span>
@@ -391,7 +393,7 @@ export default function App() {
 
       {/* Animated Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-6 mt-8 mb-6">
-        <div className="flex flex-wrap gap-2 p-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl inline-flex">
+        <div className="flex flex-wrap gap-2 p-1.5 bg-purple-900/10 backdrop-blur-md border border-purple-500/10 rounded-2xl inline-flex">
           {[
             { id: "telemetry", icon: ActivitySquare, label: "Telemetry" },
             { id: "health", icon: HeartPulse, label: "Bio-Grid" },
@@ -402,13 +404,13 @@ export default function App() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors z-10 ${
-                activeTab === tab.id ? "text-cyan-50" : "text-slate-400 hover:text-slate-200"
+                activeTab === tab.id ? "text-fuchsia-50" : "text-purple-300/60 hover:text-purple-200"
               }`}
             >
               {activeTab === tab.id && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute inset-0 bg-cyan-600/30 border border-cyan-500/40 rounded-xl -z-10 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+                  className="absolute inset-0 bg-fuchsia-600/20 border border-fuchsia-500/30 rounded-xl -z-10 shadow-[0_0_20px_rgba(217,70,239,0.15)]"
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
               )}
@@ -432,28 +434,28 @@ export default function App() {
 
             {/* TARGET PROFILE SELECTOR */}
             <div className="flex flex-col gap-3 mb-2">
-              <div className="text-xs font-semibold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+              <div className="text-xs font-semibold uppercase tracking-widest text-purple-400/80 flex items-center gap-2">
                 <FlaskConical className="w-4 h-4" /> Select Target Matrix
               </div>
               <div className="flex flex-wrap gap-4">
                 {[
-                  { id: "milk", label: "Dairy (Milk)", icon: Milk, color: "hover:border-slate-300 hover:bg-slate-800" },
-                  { id: "apple", label: "Apple Extract", icon: Leaf, color: "hover:border-emerald-500 hover:bg-emerald-900/30" },
-                  { id: "water", label: "Pure Water", icon: Droplets, color: "hover:border-blue-500 hover:bg-blue-900/30" }
+                  { id: "milk", label: "Dairy (Milk)", icon: Milk, color: "hover:border-purple-300 hover:bg-purple-800/30", activeBorder: "border-purple-300" },
+                  { id: "apple", label: "Apple Extract", icon: Leaf, color: "hover:border-teal-500 hover:bg-teal-900/30", activeBorder: "border-teal-400" },
+                  { id: "water", label: "Pure Water", icon: Droplets, color: "hover:border-blue-400 hover:bg-blue-900/30", activeBorder: "border-blue-400" }
                 ].map((profile) => (
                   <button
                     key={profile.id}
                     onClick={() => setTargetProfile(profile.id)}
                     className={`group relative flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all duration-300 border backdrop-blur-md overflow-hidden ${
                       targetProfile === profile.id
-                        ? `border-${profile.id === 'milk' ? 'slate-300' : profile.id === 'apple' ? 'emerald-500' : 'blue-500'} bg-white/10 text-white shadow-lg`
-                        : `border-white/5 bg-white/5 text-slate-400 ${profile.color}`
+                        ? `${profile.activeBorder} bg-white/10 text-white shadow-[0_0_20px_rgba(255,255,255,0.05)]`
+                        : `border-purple-500/10 bg-purple-950/20 text-purple-300/70 ${profile.color}`
                     }`}
                   >
                     {targetProfile === profile.id && (
                       <motion.div layoutId="targetHighlight" className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-50" />
                     )}
-                    <profile.icon className={`w-5 h-5 transition-transform ${targetProfile === profile.id ? 'scale-110 drop-shadow-md' : 'group-hover:scale-110'}`} />
+                    <profile.icon className={`w-5 h-5 transition-transform ${targetProfile === profile.id ? 'scale-110 drop-shadow-md text-white' : 'group-hover:scale-110'}`} />
                     {profile.label}
                   </button>
                 ))}
@@ -470,35 +472,35 @@ export default function App() {
                 transition={{ duration: 0.4, ease: "easeOut" }}
                 className="relative rounded-3xl p-8 md:p-12 overflow-hidden border backdrop-blur-2xl shadow-2xl"
                 style={{
-                  backgroundColor: `${dynamicHero.status_color || '#334155'}15`,
-                  borderColor: `${dynamicHero.status_color || '#334155'}40`,
+                  backgroundColor: `${dynamicHero.status_color}15`,
+                  borderColor: `${dynamicHero.status_color}40`,
                 }}
               >
                 {/* Dynamic Background Blob inside Hero */}
                 <div 
-                  className="absolute top-0 right-0 w-96 h-96 rounded-full blur-[80px] opacity-20 -translate-y-1/2 translate-x-1/3 pointer-events-none"
+                  className="absolute top-0 right-0 w-96 h-96 rounded-full blur-[90px] opacity-25 -translate-y-1/2 translate-x-1/3 pointer-events-none mix-blend-screen"
                   style={{ backgroundColor: dynamicHero.status_color }}
                 />
 
                 <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-8 z-10">
                   <div className="flex-1 space-y-4">
-                    <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full border bg-black/20 backdrop-blur-md text-xs font-bold uppercase tracking-[0.15em]"
+                    <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full border bg-[#090014]/40 backdrop-blur-md text-xs font-bold uppercase tracking-[0.15em]"
                          style={{ borderColor: `${dynamicHero.status_color}50`, color: dynamicHero.status_color }}>
                       {isToxic ? <ShieldAlert className="w-4 h-4 animate-bounce" /> : <ShieldCheck className="w-4 h-4" />}
                       <span>{t.verdict} ({targetProfile})</span>
                     </div>
-                    <div className="text-5xl sm:text-6xl font-black text-white tracking-tight leading-tight drop-shadow-sm">
+                    <div className="text-5xl sm:text-6xl font-black text-white tracking-tight leading-tight drop-shadow-md">
                       {dynamicHero.adulteration_type}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6 bg-[#020617]/60 p-6 rounded-3xl backdrop-blur-xl border border-white/10 shrink-0 shadow-2xl">
+                  <div className="flex items-center gap-6 bg-[#090014]/60 p-6 rounded-3xl backdrop-blur-xl border border-purple-500/10 shrink-0 shadow-2xl">
                     <div className="w-24 h-24">
                       <CircularProgressbar
                         value={dynamicHero.accuracy || 0}
                         text={`${(dynamicHero.accuracy || 0).toFixed(1)}%`}
                         styles={buildStyles({
-                          pathColor: dynamicHero.status_color || '#334155',
+                          pathColor: dynamicHero.status_color || '#a855f7',
                           trailColor: "rgba(255,255,255,0.05)",
                           textColor: "#ffffff",
                           textSize: "24px",
@@ -507,11 +509,11 @@ export default function App() {
                       />
                     </div>
                     <div>
-                      <div className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">{t.confidence}</div>
+                      <div className="text-purple-300/70 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">{t.confidence}</div>
                       <div className="text-3xl font-black text-white tabular-nums tracking-tighter">
-                        {(dynamicHero.accuracy || 0).toFixed(1)}<span className="text-xl text-slate-500">%</span>
+                        {(dynamicHero.accuracy || 0).toFixed(1)}<span className="text-xl text-purple-500">%</span>
                       </div>
-                      <div className="text-xs text-cyan-400 font-mono mt-2 bg-cyan-500/10 px-2 py-1 rounded-md border border-cyan-500/20 inline-block">
+                      <div className="text-xs text-fuchsia-400 font-mono mt-2 bg-fuchsia-500/10 px-2 py-1 rounded-md border border-fuchsia-500/20 inline-block">
                         {liveFreq} Hz Live
                       </div>
                     </div>
@@ -524,18 +526,18 @@ export default function App() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               
               {/* Safety Score Card */}
-              <div className="lg:col-span-4 rounded-3xl border border-white/5 bg-gradient-to-b from-white/5 to-transparent backdrop-blur-xl p-8 flex flex-col items-center justify-center relative shadow-lg">
+              <div className="lg:col-span-4 rounded-3xl border border-purple-500/10 bg-purple-900/10 backdrop-blur-xl p-8 flex flex-col items-center justify-center relative shadow-lg">
                 <div className="w-full flex items-center justify-between absolute top-6 px-6">
-                  <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Safety Index</span>
-                  <ActivitySquare className="w-4 h-4 text-slate-500" />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-purple-300/60">Safety Index</span>
+                  <ActivitySquare className="w-4 h-4 text-purple-500/50" />
                 </div>
-                <div className="w-40 h-40 mt-6">
+                <div className="w-40 h-40 mt-6 drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]">
                   <CircularProgressbar
                     value={dynamicSafetyScore}
                     text={`${dynamicSafetyScore}`}
                     styles={buildStyles({
                       pathColor: safetyColor,
-                      trailColor: "rgba(255,255,255,0.05)",
+                      trailColor: "rgba(168, 85, 247, 0.1)",
                       textColor: "#ffffff",
                       textSize: "28px",
                       strokeLinecap: "round"
@@ -546,46 +548,46 @@ export default function App() {
 
               {/* pH & Hardware Stats */}
               <div className="lg:col-span-8 flex flex-col gap-6">
-                <div className="rounded-3xl border border-white/5 bg-gradient-to-br from-white/5 to-transparent backdrop-blur-xl p-8 shadow-lg">
+                <div className="rounded-3xl border border-purple-500/10 bg-purple-900/10 backdrop-blur-xl p-8 shadow-lg">
                   <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-2 text-slate-400">
+                    <div className="flex items-center gap-2 text-purple-300/80">
                       <Activity className="w-4 h-4" />
                       <span className="text-xs uppercase tracking-widest font-semibold">{t.ph_meter}</span>
                     </div>
                     <div className="text-4xl font-black text-white tabular-nums tracking-tighter">{dynamicPh.toFixed(2)}</div>
                   </div>
                   
-                  {/* Enhanced pH Bar */}
-                  <div className="relative h-6 rounded-full bg-[#020617] border border-white/10 overflow-hidden shadow-inner mb-3">
+                  {/* Enhanced pH Bar (Nebula Colors) */}
+                  <div className="relative h-6 rounded-full bg-[#090014] border border-purple-500/20 overflow-hidden shadow-inner mb-3">
                     <div className="absolute inset-0 flex opacity-90">
-                      <div className="flex-1 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-400" />
-                      <div className="flex-[1.5] bg-gradient-to-r from-emerald-400 to-emerald-500" />
-                      <div className="flex-1 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500" />
+                      <div className="flex-1 bg-gradient-to-r from-pink-500 via-orange-500 to-yellow-400" />
+                      <div className="flex-[1.5] bg-gradient-to-r from-teal-400 to-teal-500" />
+                      <div className="flex-1 bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500" />
                     </div>
                     <motion.div
-                      className="absolute top-0 bottom-0 w-3 bg-white border-2 border-slate-900 rounded-full shadow-[0_0_15px_rgba(255,255,255,1)]"
+                      className="absolute top-0 bottom-0 w-3 bg-white border-2 border-[#090014] rounded-full shadow-[0_0_15px_rgba(255,255,255,1)]"
                       animate={{ left: `calc(${Math.min(Math.max(((dynamicPh - 4) / 5) * 100, 0), 100)}% - 6px)` }}
                       transition={{ type: "spring", stiffness: 100, damping: 20 }}
                     />
                   </div>
-                  <div className="flex justify-between text-[10px] uppercase font-bold text-slate-500">
+                  <div className="flex justify-between text-[10px] uppercase font-bold text-purple-400/60">
                     <span>4.0 Acidic</span>
-                    <span className="text-emerald-400/80">6.3–6.9 Ideal Milk</span>
+                    <span className="text-teal-400">6.3–6.9 Ideal</span>
                     <span>9.0 Alkaline</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Probe Temp</div>
-                    <div className="text-3xl font-black text-slate-200 tabular-nums">{meta.probe_temperature_c}<span className="text-lg text-slate-500">°C</span></div>
+                  <div className="rounded-2xl border border-purple-500/10 bg-white/[0.02] p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-t from-fuchsia-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="text-[10px] uppercase tracking-widest text-purple-300/60 font-bold mb-2">Probe Temp</div>
+                    <div className="text-3xl font-black text-fuchsia-100 tabular-nums">{meta.probe_temperature_c}<span className="text-lg text-fuchsia-500/50">°C</span></div>
                   </div>
-                  <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Base Freq</div>
-                    <div className="text-3xl font-black text-slate-200 tabular-nums">
-                      {targetProfile === 'milk' ? '2200' : targetProfile === 'apple' ? '7000' : '2000'} <span className="text-lg text-slate-500">Hz</span>
+                  <div className="rounded-2xl border border-purple-500/10 bg-white/[0.02] p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-t from-fuchsia-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="text-[10px] uppercase tracking-widest text-purple-300/60 font-bold mb-2">Base Freq</div>
+                    <div className="text-3xl font-black text-fuchsia-100 tabular-nums">
+                      {targetProfile === 'milk' ? '2200' : targetProfile === 'apple' ? '7000' : '2000'} <span className="text-lg text-fuchsia-500/50">Hz</span>
                     </div>
                   </div>
                 </div>
@@ -595,50 +597,44 @@ export default function App() {
             {/* Deep Technical Lab Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
               {/* EIS Waveform */}
-              <div className="rounded-3xl border border-white/5 bg-gradient-to-b from-white/5 to-transparent backdrop-blur-xl p-6 shadow-lg">
+              <div className="rounded-3xl border border-purple-500/10 bg-purple-900/10 backdrop-blur-xl p-6 shadow-lg">
                 <div className="flex items-center justify-between mb-6">
-                  <div className="text-xs font-bold uppercase tracking-widest text-slate-400">{t.eis_waveform}</div>
-                  <div className="flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full">
-                    <span className="text-xs font-mono text-cyan-400 font-semibold tabular-nums">
+                  <div className="text-xs font-bold uppercase tracking-widest text-purple-300/70">{t.eis_waveform}</div>
+                  <div className="flex items-center gap-2 bg-fuchsia-500/10 border border-fuchsia-500/20 px-3 py-1 rounded-full">
+                    <span className="text-xs font-mono text-fuchsia-400 font-semibold tabular-nums">
                       {zHistory.length > 0 ? `${zHistory[zHistory.length - 1]?.z} Hz` : "0 Hz"}
                     </span>
-                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                    <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse shadow-[0_0_8px_rgba(217,70,239,0.8)]" />
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={260}>
                   <LineChart data={zHistory} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                    <defs>
-                      <linearGradient id="colorZ" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
                     <XAxis dataKey="t" hide />
                     <YAxis domain={['auto', 'auto']} hide />
                     <RechartsTooltip
-                      contentStyle={{ backgroundColor: "rgba(2, 6, 23, 0.9)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#f8fafc", fontSize: "12px", backdropFilter: "blur(8px)" }}
-                      itemStyle={{ color: "#22d3ee", fontWeight: "bold" }}
+                      contentStyle={{ backgroundColor: "rgba(9, 0, 20, 0.9)", border: "1px solid rgba(168,85,247,0.3)", borderRadius: "12px", color: "#f8fafc", fontSize: "12px", backdropFilter: "blur(8px)" }}
+                      itemStyle={{ color: "#d946ef", fontWeight: "bold" }}
                       formatter={(v) => [`${v} Hz`, "Frequency"]}
                       labelFormatter={() => ""}
-                      cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 }}
+                      cursor={{ stroke: 'rgba(217,70,239,0.2)', strokeWidth: 2 }}
                     />
-                    <Line type="monotone" dataKey="z" stroke="#22d3ee" strokeWidth={3} dot={false} isAnimationActive={false} style={{ filter: "drop-shadow(0px 4px 6px rgba(34, 211, 238, 0.4))" }} />
+                    <Line type="monotone" dataKey="z" stroke="#d946ef" strokeWidth={3} dot={false} isAnimationActive={false} style={{ filter: "drop-shadow(0px 4px 6px rgba(217, 70, 239, 0.4))" }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
 
               {/* AI Probability Radar */}
-              <div className="rounded-3xl border border-white/5 bg-gradient-to-b from-white/5 to-transparent backdrop-blur-xl p-6 shadow-lg">
-                <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{t.ai_prob}</div>
+              <div className="rounded-3xl border border-purple-500/10 bg-purple-900/10 backdrop-blur-xl p-6 shadow-lg">
+                <div className="text-xs font-bold uppercase tracking-widest text-purple-300/70 mb-2">{t.ai_prob}</div>
                 <ResponsiveContainer width="100%" height={260}>
                   <RadarChart data={radarData} outerRadius={90}>
-                    <PolarGrid stroke="rgba(255,255,255,0.1)" />
-                    <PolarAngleAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11, fontWeight: 600 }} />
+                    <PolarGrid stroke="rgba(168,85,247,0.15)" />
+                    <PolarAngleAxis dataKey="name" tick={{ fill: "#c084fc", fontSize: 11, fontWeight: 600 }} />
                     <PolarRadiusAxis tick={false} axisLine={false} domain={[0, 100]} />
-                    <Radar dataKey="value" stroke="#3b82f6" strokeWidth={2} fill="#3b82f6" fillOpacity={0.4} style={{ filter: "drop-shadow(0px 0px 8px rgba(59, 130, 246, 0.5))" }} isAnimationActive={false} />
+                    <Radar dataKey="value" stroke="#a855f7" strokeWidth={2} fill="#a855f7" fillOpacity={0.3} style={{ filter: "drop-shadow(0px 0px 8px rgba(168, 85, 247, 0.5))" }} isAnimationActive={false} />
                     <RechartsTooltip
-                      contentStyle={{ backgroundColor: "rgba(2, 6, 23, 0.9)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#f8fafc", fontSize: "12px" }}
-                      itemStyle={{ color: "#60a5fa", fontWeight: "bold" }}
+                      contentStyle={{ backgroundColor: "rgba(9, 0, 20, 0.9)", border: "1px solid rgba(168,85,247,0.3)", borderRadius: "12px", color: "#f8fafc", fontSize: "12px" }}
+                      itemStyle={{ color: "#e879f9", fontWeight: "bold" }}
                     />
                   </RadarChart>
                 </ResponsiveContainer>
@@ -650,33 +646,33 @@ export default function App() {
         {/* ======================= TAB 2: HEALTH ======================= */}
         {activeTab === "health" && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-3xl border border-rose-500/20 bg-gradient-to-br from-rose-950/30 to-transparent p-10 shadow-lg relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/10 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2" />
-              <div className="w-14 h-14 bg-rose-500/20 rounded-2xl flex items-center justify-center border border-rose-500/30 text-rose-400 mb-6">
+            <div className="rounded-3xl border border-pink-500/20 bg-gradient-to-br from-pink-950/20 to-transparent p-10 shadow-lg relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-pink-500/10 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="w-14 h-14 bg-pink-500/20 rounded-2xl flex items-center justify-center border border-pink-500/30 text-pink-400 mb-6">
                 <TrendingDown className="w-7 h-7" />
               </div>
-              <h3 className="text-xs font-bold uppercase tracking-widest text-rose-400/80 mb-2">Monthly Economic Fraud Impact</h3>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-pink-400/80 mb-2">Monthly Economic Fraud Impact</h3>
               <div className="text-6xl font-black text-white mb-4 tabular-nums tracking-tighter">
-                <span className="text-3xl text-rose-500 mr-1">₹</span>
+                <span className="text-3xl text-pink-500 mr-1">₹</span>
                 {Math.round(firstNumber(primary["19_fraud_loss_penalty_inr"], 0) * 30)}
               </div>
-              <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
+              <p className="text-sm text-purple-300/60 leading-relaxed max-w-sm">
                 Financial capital lost paying pure dairy rates for water dilution and synthetic surfactant admixtures based on 1.0L daily consumption.
               </p>
             </div>
 
-            <div className="rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/30 to-transparent p-10 shadow-lg relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2" />
-              <div className="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center border border-emerald-500/30 text-emerald-400 mb-6">
+            <div className="rounded-3xl border border-teal-500/20 bg-gradient-to-br from-teal-950/20 to-transparent p-10 shadow-lg relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="w-14 h-14 bg-teal-500/20 rounded-2xl flex items-center justify-center border border-teal-500/30 text-teal-400 mb-6">
                 <DollarSign className="w-7 h-7" />
               </div>
-              <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-400/80 mb-2">True Fair Market Value</h3>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-teal-400/80 mb-2">True Fair Market Value</h3>
               <div className="text-6xl font-black text-white mb-4 tabular-nums tracking-tighter">
-                <span className="text-3xl text-emerald-500 mr-1">₹</span>
+                <span className="text-3xl text-teal-500 mr-1">₹</span>
                 {Math.max(0, 60 - firstNumber(primary["19_fraud_loss_penalty_inr"], 0)).toFixed(2)}
-                <span className="text-2xl text-slate-500 ml-2">/ L</span>
+                <span className="text-2xl text-purple-300/40 ml-2">/ L</span>
               </div>
-              <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
+              <p className="text-sm text-purple-300/60 leading-relaxed max-w-sm">
                 Equitable market valuation computed directly from active impedance vectors and missing Solids-Not-Fat (SNF).
               </p>
             </div>
@@ -685,14 +681,14 @@ export default function App() {
 
         {/* ======================= TAB 3: OPTICAL CV LAB ======================= */}
         {activeTab === "vision" && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-white/5 bg-gradient-to-b from-white/5 to-transparent p-8 shadow-xl backdrop-blur-xl">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-purple-500/10 bg-purple-900/10 p-8 shadow-xl backdrop-blur-xl">
             <div className="flex items-center gap-4 mb-8">
-              <div className="p-3 bg-cyan-500/20 rounded-xl border border-cyan-500/30">
-                <ScanFace className="w-6 h-6 text-cyan-400" />
+              <div className="p-3 bg-fuchsia-500/20 rounded-xl border border-fuchsia-500/30">
+                <ScanFace className="w-6 h-6 text-fuchsia-400" />
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white tracking-tight">Optical Computer Vision Lab</h3>
-                <p className="text-sm text-slate-400">Evaluate liquid scattering vectors using device optics</p>
+                <p className="text-sm text-purple-300/60">Evaluate liquid scattering vectors using device optics</p>
               </div>
             </div>
 
@@ -701,18 +697,18 @@ export default function App() {
               {/* Input Zone */}
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-cyan-500/30 border-dashed rounded-3xl cursor-pointer bg-cyan-950/10 hover:bg-cyan-950/30 transition-all group relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <Camera className="w-8 h-8 text-cyan-400 mb-3 group-hover:scale-110 transition-transform duration-300" />
-                    <span className="text-sm font-bold text-cyan-100">Live Camera</span>
-                    <span className="text-[10px] text-cyan-500 font-semibold uppercase mt-1 tracking-widest">Capture Photo</span>
+                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-fuchsia-500/30 border-dashed rounded-3xl cursor-pointer bg-fuchsia-950/20 hover:bg-fuchsia-900/30 transition-all group relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-t from-fuchsia-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Camera className="w-8 h-8 text-fuchsia-400 mb-3 group-hover:scale-110 transition-transform duration-300" />
+                    <span className="text-sm font-bold text-fuchsia-100">Live Camera</span>
+                    <span className="text-[10px] text-fuchsia-400 font-semibold uppercase mt-1 tracking-widest">Capture Photo</span>
                     <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageUpload} />
                   </label>
 
-                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-white/10 border-dashed rounded-3xl cursor-pointer bg-white/5 hover:bg-white/10 transition-all group relative overflow-hidden">
-                    <UploadCloud className="w-8 h-8 text-slate-400 mb-3 group-hover:text-white transition-colors duration-300" />
-                    <span className="text-sm font-bold text-slate-200">Upload File</span>
-                    <span className="text-[10px] text-slate-500 font-semibold uppercase mt-1 tracking-widest">From Gallery</span>
+                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-purple-500/20 border-dashed rounded-3xl cursor-pointer bg-white/5 hover:bg-white/10 transition-all group relative overflow-hidden">
+                    <UploadCloud className="w-8 h-8 text-purple-400/60 mb-3 group-hover:text-white transition-colors duration-300" />
+                    <span className="text-sm font-bold text-purple-200">Upload File</span>
+                    <span className="text-[10px] text-purple-400/60 font-semibold uppercase mt-1 tracking-widest">From Gallery</span>
                     <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                   </label>
                 </div>
@@ -721,7 +717,7 @@ export default function App() {
                   <button
                     onClick={executeOpticalAnalysis}
                     disabled={isAnalyzingImage}
-                    className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-3 shadow-lg disabled:opacity-70"
+                    className="w-full py-4 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-500 hover:to-purple-500 text-white font-bold uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(217,70,239,0.3)] disabled:opacity-70"
                   >
                     {isAnalyzingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
                     <span>{isAnalyzingImage ? "Computing Pixel Matrix..." : "Run Spectrophotometry"}</span>
@@ -730,41 +726,41 @@ export default function App() {
               </div>
 
               {/* Analysis Results Panel */}
-              <div className="bg-[#020617]/50 rounded-3xl border border-white/5 p-6 flex flex-col justify-center relative overflow-hidden">
+              <div className="bg-[#090014]/60 rounded-3xl border border-purple-500/10 p-6 flex flex-col justify-center relative overflow-hidden">
                 {!labImage ? (
-                  <div className="text-center text-slate-500 flex flex-col items-center justify-center h-full">
+                  <div className="text-center text-purple-500/50 flex flex-col items-center justify-center h-full">
                     <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-4">
                       <BarChart3 className="w-8 h-8 opacity-50" />
                     </div>
-                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Awaiting Image Matrix</p>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-purple-400/60">Awaiting Image Matrix</p>
                   </div>
                 ) : (
                   <div className="space-y-6 relative z-10">
                     <div className="flex gap-5 items-center">
                       <div className="relative">
-                        <div className="absolute inset-0 bg-cyan-500/20 animate-pulse rounded-2xl blur-md" />
-                        <img src={labImage} alt="Sample" className="relative w-28 h-28 object-cover rounded-2xl border border-white/20 shadow-xl" />
+                        <div className="absolute inset-0 bg-fuchsia-500/30 animate-pulse rounded-2xl blur-md" />
+                        <img src={labImage} alt="Sample" className="relative w-28 h-28 object-cover rounded-2xl border border-fuchsia-500/20 shadow-xl" />
                       </div>
                       <div>
-                        <div className="inline-block px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1.5">
+                        <div className="inline-block px-2.5 py-1 rounded-md bg-teal-500/10 border border-teal-500/20 text-[10px] font-bold text-teal-400 uppercase tracking-widest mb-1.5">
                           Buffer Staged
                         </div>
                         <div className="text-sm font-semibold text-white">Image matrix loaded</div>
-                        <div className="text-xs text-slate-400 font-mono mt-1">Ready for classification</div>
+                        <div className="text-xs text-purple-400/60 font-mono mt-1">Ready for classification</div>
                       </div>
                     </div>
 
                     <canvas ref={visionCanvasRef} className="hidden" />
 
                     {labResults && (
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white/5 rounded-2xl p-6 border border-white/10 space-y-4">
-                        <div className="text-xs font-semibold uppercase tracking-widest text-slate-400">Extracted RGB Vector</div>
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white/5 rounded-2xl p-6 border border-purple-500/10 space-y-4">
+                        <div className="text-xs font-semibold uppercase tracking-widest text-purple-300/70">Extracted RGB Vector</div>
                         <div className="grid grid-cols-3 gap-3">
-                          <div className="flex flex-col items-center justify-center py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                          <div className="flex flex-col items-center justify-center py-3 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400">
                             <span className="text-[10px] font-bold uppercase mb-1 opacity-70">Red</span>
                             <span className="font-mono text-lg font-black">{labResults.r}</span>
                           </div>
-                          <div className="flex flex-col items-center justify-center py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                          <div className="flex flex-col items-center justify-center py-3 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400">
                             <span className="text-[10px] font-bold uppercase mb-1 opacity-70">Green</span>
                             <span className="font-mono text-lg font-black">{labResults.g}</span>
                           </div>
@@ -773,9 +769,9 @@ export default function App() {
                             <span className="font-mono text-lg font-black">{labResults.b}</span>
                           </div>
                         </div>
-                        <div className={`mt-4 pt-4 border-t border-white/10 text-lg font-black tracking-tight ${
-                          labResults.alertLevel === 'danger' ? 'text-rose-400' : 
-                          labResults.alertLevel === 'warning' ? 'text-amber-400' : 'text-emerald-400'
+                        <div className={`mt-4 pt-4 border-t border-purple-500/20 text-lg font-black tracking-tight ${
+                          labResults.alertLevel === 'danger' ? 'text-pink-400' : 
+                          labResults.alertLevel === 'warning' ? 'text-orange-400' : 'text-teal-400'
                         }`}>
                           {labResults.verdict}
                         </div>
@@ -790,16 +786,16 @@ export default function App() {
 
         {/* ======================= TAB 4: ASSISTANT ======================= */}
         {activeTab === "assistant" && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-white/5 bg-gradient-to-b from-white/5 to-transparent h-[650px] flex flex-col overflow-hidden shadow-2xl backdrop-blur-xl">
-            <div className="bg-[#020617]/80 backdrop-blur-md p-5 border-b border-white/5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 relative">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-purple-500/10 bg-purple-900/10 h-[650px] flex flex-col overflow-hidden shadow-2xl backdrop-blur-xl">
+            <div className="bg-[#090014]/80 backdrop-blur-md p-5 border-b border-purple-500/10 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400 relative">
                 <MessageSquare className="w-6 h-6" />
-                <span className="absolute top-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#020617]" />
+                <span className="absolute top-0 right-0 w-3 h-3 bg-teal-400 rounded-full border-2 border-[#090014]" />
               </div>
               <div>
                 <h3 className="font-bold text-white text-base tracking-tight">Spectrometer LLM Agent</h3>
-                <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <div className="flex items-center gap-1.5 text-xs text-teal-400 font-medium mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
                   <span>Ensemble Inference Active</span>
                 </div>
               </div>
@@ -814,8 +810,8 @@ export default function App() {
                 >
                   <div className={`max-w-[80%] rounded-2xl px-6 py-4 text-sm leading-relaxed shadow-lg ${
                     item.sender === "user" 
-                      ? "bg-cyan-600 text-white rounded-br-sm" 
-                      : "bg-white/5 text-slate-200 border border-white/10 rounded-bl-sm backdrop-blur-sm"
+                      ? "bg-fuchsia-600 text-white rounded-br-sm shadow-[0_4px_15px_rgba(217,70,239,0.2)]" 
+                      : "bg-white/5 text-purple-100 border border-purple-500/20 rounded-bl-sm backdrop-blur-sm"
                   }`}>
                     {item.text}
                   </div>
@@ -824,19 +820,19 @@ export default function App() {
               <div ref={chatScrollRef} />
             </div>
 
-            <div className="p-5 bg-[#020617]/90 backdrop-blur-md border-t border-white/5">
+            <div className="p-5 bg-[#090014]/90 backdrop-blur-md border-t border-purple-500/10">
               <form onSubmit={handleChatSubmit} className="flex gap-3 relative">
                 <input
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   placeholder="Inquire about matrix data, FSSAI regulations..."
-                  className="flex-1 bg-white/5 border border-white/10 focus:border-cyan-500/50 focus:bg-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none transition-all placeholder:text-slate-500"
+                  className="flex-1 bg-white/5 border border-purple-500/20 focus:border-fuchsia-500/50 focus:bg-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none transition-all placeholder:text-purple-300/40"
                 />
                 <button 
                   type="submit" 
                   disabled={!chatInput.trim()} 
-                  className="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 disabled:hover:bg-cyan-600 text-white px-6 rounded-2xl transition-all shadow-lg flex items-center justify-center group"
+                  className="bg-fuchsia-600 hover:bg-fuchsia-500 disabled:opacity-40 disabled:hover:bg-fuchsia-600 text-white px-6 rounded-2xl transition-all shadow-[0_0_15px_rgba(217,70,239,0.3)] flex items-center justify-center group"
                 >
                   <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                 </button>
