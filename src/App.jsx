@@ -112,16 +112,13 @@ export default function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionState, setConnectionState] = useState("CONNECTING");
 
-  // Target Object Profile Selector State
   const [targetProfile, setTargetProfile] = useState("milk");
 
-  // Optical CV Lab States
   const [labImage, setLabImage] = useState(null);
   const [labResults, setLabResults] = useState(null);
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
   const visionCanvasRef = useRef(null);
 
-  // Chatbot States
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState([
     {
@@ -133,7 +130,6 @@ export default function App() {
 
   const t = useMemo(() => INTERNAL_DICTIONARY[lang] || INTERNAL_DICTIONARY.en, [lang]);
 
-  // WebSocket Connection
   useEffect(() => {
     let ws;
     let reconnectTimer;
@@ -210,9 +206,6 @@ export default function App() {
     chatScrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory]);
 
-  // ============================================================================
-  // CAMERA & FILE UPLOAD LOGIC
-  // ============================================================================
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -228,15 +221,11 @@ export default function App() {
     if (!labImage || !visionCanvasRef.current) return;
     setIsAnalyzingImage(true);
     const canvas = visionCanvasRef.current;
-    
-    // willReadFrequently for better canvas performance
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     const img = new Image();
     
-    // Removed crossOrigin to avoid local base64 blocking
     img.onload = () => {
       try {
-        // PERFORMANCE FIX: Scale huge camera photos down to a fast 150px thumbnail
         const MAX_SIZE = 150;
         const scale = Math.min(MAX_SIZE / img.width, MAX_SIZE / img.height, 1);
         canvas.width = img.width * scale;
@@ -249,7 +238,6 @@ export default function App() {
         let rT = 0, gT = 0, bT = 0;
         let pixelCount = 0;
 
-        // Loop through the tiny, optimized canvas
         for (let i = 0; i < data.length; i += 4) {
           rT += data[i];
           gT += data[i + 1];
@@ -265,7 +253,6 @@ export default function App() {
         let verdict = "Unknown Sample";
         let alertLevel = "safe";
 
-        // Spectrophotometry RGB Heuristics
         if (r > 200 && g > 200 && b > 200) {
           verdict = "Pure Milk Suspend Detected (High White Reflectance)";
           alertLevel = "safe";
@@ -286,7 +273,7 @@ export default function App() {
         setTimeout(() => {
           setLabResults({ r, g, b, verdict, alertLevel });
           setIsAnalyzingImage(false);
-        }, 1200); // Dramatic pause for presentation effect
+        }, 1200); 
 
       } catch (err) {
         console.error("Canvas Execution Error:", err);
@@ -302,11 +289,7 @@ export default function App() {
     img.src = labImage;
   };
 
-  // ============================================================================
-  // FRONTEND DYNAMIC RULE ENGINE: Overrides display based on selected object
-  // ============================================================================
   const liveFreq = meta.excitation_frequency_hz || 0;
-  
   let dynamicHero = { ...hero };
   let dynamicSafetyScore = primary["1_safety_score"] || 0;
   let dynamicPh = primary["21_REAL_TIME_PH_METER"] || 6.7;
@@ -355,42 +338,49 @@ export default function App() {
   const radarData = useMemo(() => parseProbabilityDistribution(secondary?.ai_and_regulatory_metrology?.["35_Class_Probability_Distribution"]), [secondary]);
 
   return (
-    <div className="min-h-screen font-sans bg-slate-950 text-slate-100 selection:bg-cyan-500/30 relative overflow-hidden pb-16">
-      {/* Background Lighting Elements */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-cyan-600/10 rounded-full blur-[140px] pointer-events-none -z-10" />
-      <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:28px_28px] opacity-15 pointer-events-none -z-10" />
+    <div className="min-h-screen font-sans bg-[#020617] text-slate-100 selection:bg-cyan-500/30 relative overflow-hidden pb-16">
+      
+      {/* Dynamic Background Glows */}
+      <div 
+        className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full blur-[120px] pointer-events-none transition-colors duration-1000" 
+        style={{ backgroundColor: `${dynamicHero.status_color}15` }} 
+      />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none" />
 
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b backdrop-blur-xl bg-slate-950/80 border-slate-800/80">
+      {/* Modern Header */}
+      <header className="sticky top-0 z-40 border-b backdrop-blur-2xl bg-[#020617]/70 border-white/5 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-11 h-11 bg-gradient-to-br from-cyan-400 via-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.4)] border border-cyan-400/30">
-              <Cpu className="w-6 h-6 text-white animate-pulse" />
+            <div className="relative">
+              <div className="absolute inset-0 bg-cyan-500 blur-md opacity-30 rounded-xl animate-pulse" />
+              <div className="relative w-12 h-12 bg-gradient-to-br from-cyan-400 via-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg border border-white/20">
+                <Cpu className="w-6 h-6 text-white" />
+              </div>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black tracking-tight text-white">{t.app_title}</h1>
-                <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                  ESP32 • ENSEMBLE AI
+                <h1 className="text-xl font-bold tracking-tight text-white">{t.app_title}</h1>
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  ESP32 • AI
                 </span>
               </div>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-cyan-400/90 font-semibold">{t.subtitle}</p>
+              <p className="text-xs tracking-wider text-slate-400 font-medium mt-0.5">{t.subtitle}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
             <select
               value={lang}
               onChange={(e) => setLang(e.target.value)}
-              className="bg-slate-900 border border-slate-700 hover:border-cyan-500 text-white rounded-xl px-3 py-2 text-xs font-bold uppercase transition-all outline-none cursor-pointer"
+              className="bg-white/5 border border-white/10 hover:border-cyan-500/50 text-slate-200 rounded-lg px-3 py-2 text-xs font-semibold uppercase transition-all outline-none cursor-pointer backdrop-blur-md"
             >
               {GLOBAL_LANGUAGES.map((l) => (
-                <option key={l.code} value={l.code}>{l.nativeName} ({l.name})</option>
+                <option key={l.code} value={l.code} className="bg-slate-900">{l.nativeName}</option>
               ))}
             </select>
             <InstallApp />
-            <div className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-bold tracking-wide uppercase transition-all ${
-              isConnected ? "border-emerald-500/40 text-emerald-300 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.15)]" : "border-rose-500/40 text-rose-300 bg-rose-500/10 animate-pulse"
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-xs font-bold tracking-wide uppercase transition-all backdrop-blur-md ${
+              isConnected ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10" : "border-rose-500/30 text-rose-400 bg-rose-500/10 animate-pulse"
             }`}>
               {isConnected ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
               <span>{isConnected ? t.live : connectionState === "RECONNECTING" ? t.reconnecting : t.offline}</span>
@@ -399,27 +389,34 @@ export default function App() {
         </div>
       </header>
 
-      {/* Tabs */}
-      <div className="max-w-7xl mx-auto px-6 mt-6 mb-6 flex flex-wrap gap-2 border-b border-slate-800/80 pb-2">
-        {[
-          { id: "telemetry", icon: ActivitySquare, label: "Neural Telemetry" },
-          { id: "health", icon: HeartPulse, label: "Clinical Bio-Grid" },
-          { id: "vision", icon: ScanFace, label: "Optical CV Lab" },
-          { id: "assistant", icon: MessageSquare, label: "LLM Biosensor Agent" }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-              activeTab === tab.id
-                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
-            }`}
-          >
-            <tab.icon className="w-4 h-4" />
-            <span>{tab.label}</span>
-          </button>
-        ))}
+      {/* Animated Navigation Tabs */}
+      <div className="max-w-7xl mx-auto px-6 mt-8 mb-6">
+        <div className="flex flex-wrap gap-2 p-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl inline-flex">
+          {[
+            { id: "telemetry", icon: ActivitySquare, label: "Telemetry" },
+            { id: "health", icon: HeartPulse, label: "Bio-Grid" },
+            { id: "vision", icon: ScanFace, label: "Optical Lab" },
+            { id: "assistant", icon: MessageSquare, label: "AI Agent" }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors z-10 ${
+                activeTab === tab.id ? "text-cyan-50" : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              {activeTab === tab.id && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute inset-0 bg-cyan-600/30 border border-cyan-500/40 rounded-xl -z-10 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
+              )}
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Main Container */}
@@ -427,88 +424,95 @@ export default function App() {
         
         {/* ======================= TAB 1: TELEMETRY ======================= */}
         {activeTab === "telemetry" && (
-          <div className="space-y-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
 
             {/* TARGET PROFILE SELECTOR */}
-            <div className="flex flex-col gap-3 mb-6">
-              <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">Select Target Matrix to Test Purity:</div>
+            <div className="flex flex-col gap-3 mb-2">
+              <div className="text-xs font-semibold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                <FlaskConical className="w-4 h-4" /> Select Target Matrix
+              </div>
               <div className="flex flex-wrap gap-4">
                 {[
-                  { id: "milk", label: "Dairy (Milk)", icon: Milk, bg: "bg-slate-800", activeText: "text-white", border: "border-slate-400" },
-                  { id: "apple", label: "Apple Extract", icon: Leaf, bg: "bg-emerald-900/50", activeText: "text-emerald-400", border: "border-emerald-500" },
-                  { id: "water", label: "Pure Water", icon: Droplets, bg: "bg-blue-900/50", activeText: "text-blue-400", border: "border-blue-500" }
+                  { id: "milk", label: "Dairy (Milk)", icon: Milk, color: "hover:border-slate-300 hover:bg-slate-800" },
+                  { id: "apple", label: "Apple Extract", icon: Leaf, color: "hover:border-emerald-500 hover:bg-emerald-900/30" },
+                  { id: "water", label: "Pure Water", icon: Droplets, color: "hover:border-blue-500 hover:bg-blue-900/30" }
                 ].map((profile) => (
                   <button
                     key={profile.id}
                     onClick={() => setTargetProfile(profile.id)}
-                    className={`flex items-center gap-2.5 px-6 py-3.5 rounded-2xl font-black uppercase tracking-wider transition-all duration-300 shadow-lg ${
+                    className={`group relative flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all duration-300 border backdrop-blur-md overflow-hidden ${
                       targetProfile === profile.id
-                        ? `${profile.bg} ${profile.activeText} border-2 ${profile.border} scale-105 shadow-[0_0_20px_rgba(255,255,255,0.05)]`
-                        : "bg-slate-900/60 text-slate-500 border-2 border-transparent hover:bg-slate-800 hover:text-slate-300"
+                        ? `border-${profile.id === 'milk' ? 'slate-300' : profile.id === 'apple' ? 'emerald-500' : 'blue-500'} bg-white/10 text-white shadow-lg`
+                        : `border-white/5 bg-white/5 text-slate-400 ${profile.color}`
                     }`}
                   >
-                    <profile.icon className="w-5 h-5" />
+                    {targetProfile === profile.id && (
+                      <motion.div layoutId="targetHighlight" className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-50" />
+                    )}
+                    <profile.icon className={`w-5 h-5 transition-transform ${targetProfile === profile.id ? 'scale-110 drop-shadow-md' : 'group-hover:scale-110'}`} />
                     {profile.label}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Hero Section (Uses Dynamic Data) */}
+            {/* Hero Section */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={dynamicHero.adulteration_type}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3 }}
-                className="rounded-3xl p-8 md:p-10 relative overflow-hidden backdrop-blur-xl border shadow-2xl"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="relative rounded-3xl p-8 md:p-12 overflow-hidden border backdrop-blur-2xl shadow-2xl"
                 style={{
-                  backgroundColor: `${dynamicHero.status_color || '#334155'}18`,
-                  backgroundImage: `linear-gradient(135deg, ${dynamicHero.status_color || '#334155'}30 0%, ${dynamicHero.status_color || '#334155'}05 100%)`,
-                  borderColor: dynamicHero.status_color || '#334155'
+                  backgroundColor: `${dynamicHero.status_color || '#334155'}15`,
+                  borderColor: `${dynamicHero.status_color || '#334155'}40`,
                 }}
               >
-                {isToxic && (
-                  <motion.div
-                    className="absolute inset-0 rounded-3xl"
-                    animate={{ boxShadow: ["0 0 0 0 rgba(239,68,68,0)", "0 0 0 16px rgba(239,68,68,0.25)", "0 0 0 0 rgba(239,68,68,0)"] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  />
-                )}
+                {/* Dynamic Background Blob inside Hero */}
+                <div 
+                  className="absolute top-0 right-0 w-96 h-96 rounded-full blur-[80px] opacity-20 -translate-y-1/2 translate-x-1/3 pointer-events-none"
+                  style={{ backgroundColor: dynamicHero.status_color }}
+                />
 
-                <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-6 z-10">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2.5 text-white/90 text-xs font-black uppercase tracking-[0.2em] mb-3">
-                      {isToxic ? <ShieldAlert className="w-5 h-5 text-rose-400 animate-bounce" /> : <ShieldCheck className="w-5 h-5 text-emerald-400" />}
-                      <span>{t.verdict} ({targetProfile.toUpperCase()})</span>
+                <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-8 z-10">
+                  <div className="flex-1 space-y-4">
+                    <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full border bg-black/20 backdrop-blur-md text-xs font-bold uppercase tracking-[0.15em]"
+                         style={{ borderColor: `${dynamicHero.status_color}50`, color: dynamicHero.status_color }}>
+                      {isToxic ? <ShieldAlert className="w-4 h-4 animate-bounce" /> : <ShieldCheck className="w-4 h-4" />}
+                      <span>{t.verdict} ({targetProfile})</span>
                     </div>
-                    <div className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-none drop-shadow-md mb-2">
+                    <div className="text-5xl sm:text-6xl font-black text-white tracking-tight leading-tight drop-shadow-sm">
                       {dynamicHero.adulteration_type}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6 bg-slate-950/60 p-6 rounded-2xl backdrop-blur-md border border-white/10 shrink-0 shadow-2xl">
-                    <div className="w-28 h-28">
+                  <div className="flex items-center gap-6 bg-[#020617]/60 p-6 rounded-3xl backdrop-blur-xl border border-white/10 shrink-0 shadow-2xl">
+                    <div className="w-24 h-24">
                       <CircularProgressbar
                         value={dynamicHero.accuracy || 0}
                         text={`${(dynamicHero.accuracy || 0).toFixed(1)}%`}
                         styles={buildStyles({
                           pathColor: dynamicHero.status_color || '#334155',
-                          trailColor: "rgba(255,255,255,0.08)",
+                          trailColor: "rgba(255,255,255,0.05)",
                           textColor: "#ffffff",
-                          textSize: "22px",
+                          textSize: "24px",
                           strokeLinecap: "round"
                         })}
                       />
                     </div>
                     <div>
-                      <div className="text-white/70 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">{t.confidence}</div>
-                      <div className="text-2xl font-black text-white tabular-nums tracking-tighter">
-                        {(dynamicHero.accuracy || 0).toFixed(1)}%
+                      <div className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">{t.confidence}</div>
+                      <div className="text-3xl font-black text-white tabular-nums tracking-tighter">
+                        {(dynamicHero.accuracy || 0).toFixed(1)}<span className="text-xl text-slate-500">%</span>
                       </div>
-                      <div className="text-[10px] text-cyan-400 font-mono mt-1">
-                        LIVE FREQ: {liveFreq} Hz
+                      <div className="text-xs text-cyan-400 font-mono mt-2 bg-cyan-500/10 px-2 py-1 rounded-md border border-cyan-500/20 inline-block">
+                        {liveFreq} Hz Live
                       </div>
                     </div>
                   </div>
@@ -516,303 +520,329 @@ export default function App() {
               </motion.div>
             </AnimatePresence>
 
-            {/* Consumer Intel */}
-            <section>
-              <div className="flex items-center gap-3 mb-5">
-                <ActivitySquare className="w-5 h-5 text-cyan-400" />
-                <h2 className="text-sm font-bold uppercase tracking-[0.15em] text-slate-300">{t.consumer_intel}</h2>
+            {/* Metrics Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              
+              {/* Safety Score Card */}
+              <div className="lg:col-span-4 rounded-3xl border border-white/5 bg-gradient-to-b from-white/5 to-transparent backdrop-blur-xl p-8 flex flex-col items-center justify-center relative shadow-lg">
+                <div className="w-full flex items-center justify-between absolute top-6 px-6">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Safety Index</span>
+                  <ActivitySquare className="w-4 h-4 text-slate-500" />
+                </div>
+                <div className="w-40 h-40 mt-6">
+                  <CircularProgressbar
+                    value={dynamicSafetyScore}
+                    text={`${dynamicSafetyScore}`}
+                    styles={buildStyles({
+                      pathColor: safetyColor,
+                      trailColor: "rgba(255,255,255,0.05)",
+                      textColor: "#ffffff",
+                      textSize: "28px",
+                      strokeLinecap: "round"
+                    })}
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-                <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-xl p-6 flex flex-col items-center justify-center relative shadow-xl">
-                  <div className="w-32 h-32">
-                    <CircularProgressbar
-                      value={dynamicSafetyScore}
-                      text={`${dynamicSafetyScore}`}
-                      styles={buildStyles({
-                        pathColor: safetyColor,
-                        trailColor: "rgba(30, 41, 59, 0.6)",
-                        textColor: "#f8fafc",
-                        textSize: "26px",
-                        strokeLinecap: "round"
-                      })}
+              {/* pH & Hardware Stats */}
+              <div className="lg:col-span-8 flex flex-col gap-6">
+                <div className="rounded-3xl border border-white/5 bg-gradient-to-br from-white/5 to-transparent backdrop-blur-xl p-8 shadow-lg">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2 text-slate-400">
+                      <Activity className="w-4 h-4" />
+                      <span className="text-xs uppercase tracking-widest font-semibold">{t.ph_meter}</span>
+                    </div>
+                    <div className="text-4xl font-black text-white tabular-nums tracking-tighter">{dynamicPh.toFixed(2)}</div>
+                  </div>
+                  
+                  {/* Enhanced pH Bar */}
+                  <div className="relative h-6 rounded-full bg-[#020617] border border-white/10 overflow-hidden shadow-inner mb-3">
+                    <div className="absolute inset-0 flex opacity-90">
+                      <div className="flex-1 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-400" />
+                      <div className="flex-[1.5] bg-gradient-to-r from-emerald-400 to-emerald-500" />
+                      <div className="flex-1 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500" />
+                    </div>
+                    <motion.div
+                      className="absolute top-0 bottom-0 w-3 bg-white border-2 border-slate-900 rounded-full shadow-[0_0_15px_rgba(255,255,255,1)]"
+                      animate={{ left: `calc(${Math.min(Math.max(((dynamicPh - 4) / 5) * 100, 0), 100)}% - 6px)` }}
+                      transition={{ type: "spring", stiffness: 100, damping: 20 }}
                     />
                   </div>
-                  <div className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 mt-5 bg-slate-950/80 px-4 py-1.5 rounded-full border border-slate-800">
-                    {t.safety_score}
+                  <div className="flex justify-between text-[10px] uppercase font-bold text-slate-500">
+                    <span>4.0 Acidic</span>
+                    <span className="text-emerald-400/80">6.3–6.9 Ideal Milk</span>
+                    <span>9.0 Alkaline</span>
                   </div>
                 </div>
 
-                <div className="md:col-span-2 flex flex-col gap-5">
-                  <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-xl p-6 relative overflow-hidden shadow-xl">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-cyan-400" />
-                        <span className="text-xs uppercase tracking-[0.15em] text-slate-400 font-semibold">{t.ph_meter}</span>
-                      </div>
-                      <div className="text-3xl font-black text-cyan-300 tabular-nums">{dynamicPh.toFixed(2)}</div>
-                    </div>
-                    <div className="relative h-4 rounded-full bg-slate-950 border border-slate-800 overflow-hidden shadow-inner">
-                      <div className="absolute inset-0 flex opacity-80">
-                        <div className="flex-1 bg-gradient-to-r from-rose-500 to-amber-500" />
-                        <div className="flex-[1.4] bg-gradient-to-r from-emerald-400 to-emerald-500" />
-                        <div className="flex-1 bg-gradient-to-r from-amber-500 to-rose-500" />
-                      </div>
-                      <motion.div
-                        className="absolute top-0 bottom-0 w-2.5 bg-white rounded-full shadow-[0_0_12px_4px_rgba(255,255,255,0.8)]"
-                        animate={{ left: `calc(${((dynamicPh - 4) / 5) * 100}% - 5px)` }}
-                        transition={{ type: "spring", stiffness: 120, damping: 18 }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-[10px] uppercase font-bold text-slate-500 mt-2">
-                      <span>4.0 Acidic</span>
-                      <span className="text-emerald-400">6.3–6.9 Ideal Milk</span>
-                      <span>9.0 Alkaline</span>
-                    </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Probe Temp</div>
+                    <div className="text-3xl font-black text-slate-200 tabular-nums">{meta.probe_temperature_c}<span className="text-lg text-slate-500">°C</span></div>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-5">
-                    <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5 text-center shadow-lg">
-                      <div className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-bold mb-1">Probe Temperature</div>
-                      <div className="text-2xl font-black text-cyan-400 tabular-nums">{meta.probe_temperature_c}°C</div>
-                    </div>
-                    <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5 text-center shadow-lg">
-                      <div className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-bold mb-1">Target Base Freq</div>
-                      <div className="text-2xl font-black text-cyan-400 tabular-nums">
-                        {targetProfile === 'milk' ? '2200' : targetProfile === 'apple' ? '7000' : '2000'} Hz
-                      </div>
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Base Freq</div>
+                    <div className="text-3xl font-black text-slate-200 tabular-nums">
+                      {targetProfile === 'milk' ? '2200' : targetProfile === 'apple' ? '7000' : '2000'} <span className="text-lg text-slate-500">Hz</span>
                     </div>
                   </div>
                 </div>
               </div>
-            </section>
+            </div>
 
             {/* Deep Technical Lab Section */}
-            <section className="pt-4">
-              <div className="flex items-center gap-3 mb-5">
-                <FlaskConical className="w-5 h-5 text-cyan-400" />
-                <h2 className="text-sm font-bold uppercase tracking-[0.15em] text-slate-300">{t.deep_lab}</h2>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-xl p-6 shadow-xl">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="text-xs font-bold uppercase tracking-[0.15em] text-slate-400">{t.eis_waveform}</div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono text-cyan-400 tabular-nums">
-                        {zHistory.length > 0 ? `${zHistory[zHistory.length - 1]?.z} Hz` : "0 Hz"}
-                      </span>
-                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
-                    </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+              {/* EIS Waveform */}
+              <div className="rounded-3xl border border-white/5 bg-gradient-to-b from-white/5 to-transparent backdrop-blur-xl p-6 shadow-lg">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="text-xs font-bold uppercase tracking-widest text-slate-400">{t.eis_waveform}</div>
+                  <div className="flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full">
+                    <span className="text-xs font-mono text-cyan-400 font-semibold tabular-nums">
+                      {zHistory.length > 0 ? `${zHistory[zHistory.length - 1]?.z} Hz` : "0 Hz"}
+                    </span>
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
                   </div>
-                  <ResponsiveContainer width="100%" height={230}>
-                    <LineChart data={zHistory} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                      <XAxis dataKey="t" hide />
-                      <YAxis domain={['auto', 'auto']} hide />
-                      <RechartsTooltip
-                        contentStyle={{ backgroundColor: "rgba(15, 23, 42, 0.95)", border: "1px solid #334155", borderRadius: "12px", color: "#f8fafc", fontSize: "12px" }}
-                        itemStyle={{ color: "#22d3ee" }}
-                        formatter={(v) => [`${v} Hz`, "Excitation Frequency"]}
-                        labelFormatter={() => ""}
-                      />
-                      <Line type="monotone" dataKey="z" stroke="#22d3ee" strokeWidth={3} dot={false} isAnimationActive={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
                 </div>
-
-                <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-xl p-6 shadow-xl">
-                  <div className="text-xs font-bold uppercase tracking-[0.15em] text-slate-400 mb-2">{t.ai_prob}</div>
-                  <ResponsiveContainer width="100%" height={240}>
-                    <RadarChart data={radarData} outerRadius={80}>
-                      <PolarGrid stroke="#334155" />
-                      <PolarAngleAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }} />
-                      <PolarRadiusAxis tick={false} axisLine={false} domain={[0, 100]} />
-                      <Radar dataKey="value" stroke="#22d3ee" strokeWidth={2.5} fill="#22d3ee" fillOpacity={0.3} isAnimationActive={false} />
-                      <RechartsTooltip
-                        contentStyle={{ backgroundColor: "rgba(15, 23, 42, 0.95)", border: "1px solid #334155", borderRadius: "12px", color: "#f8fafc", fontSize: "12px" }}
-                        itemStyle={{ color: "#22d3ee" }}
-                      />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
+                <ResponsiveContainer width="100%" height={260}>
+                  <LineChart data={zHistory} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                    <defs>
+                      <linearGradient id="colorZ" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="t" hide />
+                    <YAxis domain={['auto', 'auto']} hide />
+                    <RechartsTooltip
+                      contentStyle={{ backgroundColor: "rgba(2, 6, 23, 0.9)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#f8fafc", fontSize: "12px", backdropFilter: "blur(8px)" }}
+                      itemStyle={{ color: "#22d3ee", fontWeight: "bold" }}
+                      formatter={(v) => [`${v} Hz`, "Frequency"]}
+                      labelFormatter={() => ""}
+                      cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 }}
+                    />
+                    <Line type="monotone" dataKey="z" stroke="#22d3ee" strokeWidth={3} dot={false} isAnimationActive={false} style={{ filter: "drop-shadow(0px 4px 6px rgba(34, 211, 238, 0.4))" }} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
-            </section>
-          </div>
+
+              {/* AI Probability Radar */}
+              <div className="rounded-3xl border border-white/5 bg-gradient-to-b from-white/5 to-transparent backdrop-blur-xl p-6 shadow-lg">
+                <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{t.ai_prob}</div>
+                <ResponsiveContainer width="100%" height={260}>
+                  <RadarChart data={radarData} outerRadius={90}>
+                    <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                    <PolarAngleAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11, fontWeight: 600 }} />
+                    <PolarRadiusAxis tick={false} axisLine={false} domain={[0, 100]} />
+                    <Radar dataKey="value" stroke="#3b82f6" strokeWidth={2} fill="#3b82f6" fillOpacity={0.4} style={{ filter: "drop-shadow(0px 0px 8px rgba(59, 130, 246, 0.5))" }} isAnimationActive={false} />
+                    <RechartsTooltip
+                      contentStyle={{ backgroundColor: "rgba(2, 6, 23, 0.9)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#f8fafc", fontSize: "12px" }}
+                      itemStyle={{ color: "#60a5fa", fontWeight: "bold" }}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </motion.div>
         )}
 
         {/* ======================= TAB 2: HEALTH ======================= */}
         {activeTab === "health" && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 p-8 shadow-xl">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-rose-500/20 rounded-2xl flex items-center justify-center border border-rose-500/30 text-rose-400">
-                    <TrendingDown className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-black uppercase tracking-widest text-rose-400">Monthly Economic Fraud Impact</h3>
-                    <p className="text-[11px] text-slate-400">Calculated over 1.0L daily household consumption</p>
-                  </div>
-                </div>
-                <div className="text-5xl font-black text-white mb-2 tabular-nums">₹{Math.round(firstNumber(primary["19_fraud_loss_penalty_inr"], 0) * 30)}</div>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Financial capital lost paying pure dairy rates for water dilution and synthetic surfactant admixtures.
-                </p>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="rounded-3xl border border-rose-500/20 bg-gradient-to-br from-rose-950/30 to-transparent p-10 shadow-lg relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/10 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="w-14 h-14 bg-rose-500/20 rounded-2xl flex items-center justify-center border border-rose-500/30 text-rose-400 mb-6">
+                <TrendingDown className="w-7 h-7" />
               </div>
-
-              <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 p-8 shadow-xl">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center border border-emerald-500/30 text-emerald-400">
-                    <DollarSign className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-black uppercase tracking-widest text-emerald-400">True Fair Market Value</h3>
-                    <p className="text-[11px] text-slate-400">Calibrated against missing Solids-Not-Fat (SNF)</p>
-                  </div>
-                </div>
-                <div className="text-5xl font-black text-white mb-2 tabular-nums">₹{Math.max(0, 60 - firstNumber(primary["19_fraud_loss_penalty_inr"], 0)).toFixed(2)} / L</div>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Equitable market valuation computed directly from active impedance and density vectors.
-                </p>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-rose-400/80 mb-2">Monthly Economic Fraud Impact</h3>
+              <div className="text-6xl font-black text-white mb-4 tabular-nums tracking-tighter">
+                <span className="text-3xl text-rose-500 mr-1">₹</span>
+                {Math.round(firstNumber(primary["19_fraud_loss_penalty_inr"], 0) * 30)}
               </div>
+              <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
+                Financial capital lost paying pure dairy rates for water dilution and synthetic surfactant admixtures based on 1.0L daily consumption.
+              </p>
             </div>
-          </div>
+
+            <div className="rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/30 to-transparent p-10 shadow-lg relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center border border-emerald-500/30 text-emerald-400 mb-6">
+                <DollarSign className="w-7 h-7" />
+              </div>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-400/80 mb-2">True Fair Market Value</h3>
+              <div className="text-6xl font-black text-white mb-4 tabular-nums tracking-tighter">
+                <span className="text-3xl text-emerald-500 mr-1">₹</span>
+                {Math.max(0, 60 - firstNumber(primary["19_fraud_loss_penalty_inr"], 0)).toFixed(2)}
+                <span className="text-2xl text-slate-500 ml-2">/ L</span>
+              </div>
+              <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
+                Equitable market valuation computed directly from active impedance vectors and missing Solids-Not-Fat (SNF).
+              </p>
+            </div>
+          </motion.div>
         )}
 
-        {/* ======================= TAB 3: OPTICAL CV LAB (CAMERA) ======================= */}
+        {/* ======================= TAB 3: OPTICAL CV LAB ======================= */}
         {activeTab === "vision" && (
-          <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 p-8 shadow-xl">
-            <div className="flex items-center gap-3 mb-6">
-              <ScanFace className="w-6 h-6 text-cyan-400" />
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-white/5 bg-gradient-to-b from-white/5 to-transparent p-8 shadow-xl backdrop-blur-xl">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="p-3 bg-cyan-500/20 rounded-xl border border-cyan-500/30">
+                <ScanFace className="w-6 h-6 text-cyan-400" />
+              </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Optical Computer Vision Lab</h3>
-                <p className="text-xs text-slate-400">Analyze samples using your device camera or file upload</p>
+                <h3 className="text-xl font-bold text-white tracking-tight">Optical Computer Vision Lab</h3>
+                <p className="text-sm text-slate-400">Evaluate liquid scattering vectors using device optics</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               
-              {/* Camera & Upload Controls */}
-              <div className="flex flex-col gap-4">
+              {/* Input Zone */}
+              <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  
-                  {/* Live Camera Button */}
-                  <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-cyan-700/50 border-dashed rounded-3xl cursor-pointer bg-cyan-950/20 hover:bg-cyan-900/40 transition-all group">
-                    <Camera className="w-8 h-8 text-cyan-500 mb-2 group-hover:scale-110 transition-transform" />
+                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-cyan-500/30 border-dashed rounded-3xl cursor-pointer bg-cyan-950/10 hover:bg-cyan-950/30 transition-all group relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Camera className="w-8 h-8 text-cyan-400 mb-3 group-hover:scale-110 transition-transform duration-300" />
                     <span className="text-sm font-bold text-cyan-100">Live Camera</span>
-                    <span className="text-[10px] text-cyan-400/60 uppercase mt-1">Take a Photo</span>
-                    {/* capture="environment" forces the rear camera to open on mobile devices */}
+                    <span className="text-[10px] text-cyan-500 font-semibold uppercase mt-1 tracking-widest">Capture Photo</span>
                     <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageUpload} />
                   </label>
 
-                  {/* Standard File Upload Button */}
-                  <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-slate-700 border-dashed rounded-3xl cursor-pointer bg-slate-950/60 hover:bg-slate-900 transition-all group">
-                    <UploadCloud className="w-8 h-8 text-slate-500 mb-2 group-hover:text-white transition-colors" />
-                    <span className="text-sm font-bold text-slate-300">Upload File</span>
-                    <span className="text-[10px] text-slate-500 uppercase mt-1">From Gallery</span>
+                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-white/10 border-dashed rounded-3xl cursor-pointer bg-white/5 hover:bg-white/10 transition-all group relative overflow-hidden">
+                    <UploadCloud className="w-8 h-8 text-slate-400 mb-3 group-hover:text-white transition-colors duration-300" />
+                    <span className="text-sm font-bold text-slate-200">Upload File</span>
+                    <span className="text-[10px] text-slate-500 font-semibold uppercase mt-1 tracking-widest">From Gallery</span>
                     <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                   </label>
-                  
                 </div>
 
                 {labImage && (
                   <button
                     onClick={executeOpticalAnalysis}
                     disabled={isAnalyzingImage}
-                    className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 text-white font-black uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-2 shadow-xl shadow-cyan-950/50"
+                    className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-3 shadow-lg disabled:opacity-70"
                   >
                     {isAnalyzingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
-                    <span>{isAnalyzingImage ? "Analyzing Vectors…" : "Run Spectrophotometry"}</span>
+                    <span>{isAnalyzingImage ? "Computing Pixel Matrix..." : "Run Spectrophotometry"}</span>
                   </button>
                 )}
               </div>
 
-              {/* Analysis Results */}
-              <div className="bg-slate-950/80 rounded-3xl border border-slate-800 p-6 flex flex-col justify-center">
+              {/* Analysis Results Panel */}
+              <div className="bg-[#020617]/50 rounded-3xl border border-white/5 p-6 flex flex-col justify-center relative overflow-hidden">
                 {!labImage ? (
-                  <div className="text-center text-slate-600">
-                    <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                    <p className="text-xs font-bold uppercase tracking-widest">Awaiting Image Capture</p>
+                  <div className="text-center text-slate-500 flex flex-col items-center justify-center h-full">
+                    <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-4">
+                      <BarChart3 className="w-8 h-8 opacity-50" />
+                    </div>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Awaiting Image Matrix</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    <div className="flex gap-4 items-center">
-                      <img src={labImage} alt="Sample" className="w-24 h-24 object-cover rounded-2xl border border-slate-700 shadow-lg" />
+                  <div className="space-y-6 relative z-10">
+                    <div className="flex gap-5 items-center">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-cyan-500/20 animate-pulse rounded-2xl blur-md" />
+                        <img src={labImage} alt="Sample" className="relative w-28 h-28 object-cover rounded-2xl border border-white/20 shadow-xl" />
+                      </div>
                       <div>
-                        <div className="text-xs font-bold text-slate-200">Image Buffer Staged</div>
-                        <div className="text-[11px] text-cyan-400 font-mono">Ready for Pixel Classification</div>
+                        <div className="inline-block px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1.5">
+                          Buffer Staged
+                        </div>
+                        <div className="text-sm font-semibold text-white">Image matrix loaded</div>
+                        <div className="text-xs text-slate-400 font-mono mt-1">Ready for classification</div>
                       </div>
                     </div>
 
                     <canvas ref={visionCanvasRef} className="hidden" />
 
                     {labResults && (
-                      <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-3">
-                        <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Extracted RGB Vector</div>
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white/5 rounded-2xl p-6 border border-white/10 space-y-4">
+                        <div className="text-xs font-semibold uppercase tracking-widest text-slate-400">Extracted RGB Vector</div>
                         <div className="grid grid-cols-3 gap-3">
-                          <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-center font-mono text-xs text-rose-300">R: {labResults.r}</div>
-                          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center font-mono text-xs text-emerald-300">G: {labResults.g}</div>
-                          <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-center font-mono text-xs text-blue-300">B: {labResults.b}</div>
+                          <div className="flex flex-col items-center justify-center py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                            <span className="text-[10px] font-bold uppercase mb-1 opacity-70">Red</span>
+                            <span className="font-mono text-lg font-black">{labResults.r}</span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                            <span className="text-[10px] font-bold uppercase mb-1 opacity-70">Green</span>
+                            <span className="font-mono text-lg font-black">{labResults.g}</span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center py-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                            <span className="text-[10px] font-bold uppercase mb-1 opacity-70">Blue</span>
+                            <span className="font-mono text-lg font-black">{labResults.b}</span>
+                          </div>
                         </div>
-                        <div className={`text-sm font-black pt-2 ${
+                        <div className={`mt-4 pt-4 border-t border-white/10 text-lg font-black tracking-tight ${
                           labResults.alertLevel === 'danger' ? 'text-rose-400' : 
                           labResults.alertLevel === 'warning' ? 'text-amber-400' : 'text-emerald-400'
                         }`}>
                           {labResults.verdict}
                         </div>
-                      </div>
+                      </motion.div>
                     )}
                   </div>
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* ======================= TAB 4: ASSISTANT ======================= */}
         {activeTab === "assistant" && (
-          <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 h-[620px] flex flex-col overflow-hidden shadow-2xl backdrop-blur-xl">
-            <div className="bg-slate-950 p-4 border-b border-slate-800 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-cyan-950 border border-cyan-800 flex items-center justify-center text-cyan-400">
-                <MessageSquare className="w-5 h-5" />
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-white/5 bg-gradient-to-b from-white/5 to-transparent h-[650px] flex flex-col overflow-hidden shadow-2xl backdrop-blur-xl">
+            <div className="bg-[#020617]/80 backdrop-blur-md p-5 border-b border-white/5 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 relative">
+                <MessageSquare className="w-6 h-6" />
+                <span className="absolute top-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#020617]" />
               </div>
               <div>
-                <h3 className="font-bold text-white text-sm">Smart Spoon Biosensor LLM Assistant</h3>
-                <div className="flex items-center gap-1.5 text-[11px] text-emerald-400">
+                <h3 className="font-bold text-white text-base tracking-tight">Spectrometer LLM Agent</h3>
+                <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span>Ensemble Inference Active</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {chatHistory.map((item, idx) => (
-                <div key={idx} className={`flex ${item.sender === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[80%] rounded-2xl px-5 py-3 text-sm leading-relaxed ${
-                    item.sender === "user" ? "bg-cyan-600 text-white rounded-tr-none shadow-lg" : "bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none shadow-lg"
+                <motion.div 
+                  initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} 
+                  key={idx} 
+                  className={`flex ${item.sender === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div className={`max-w-[80%] rounded-2xl px-6 py-4 text-sm leading-relaxed shadow-lg ${
+                    item.sender === "user" 
+                      ? "bg-cyan-600 text-white rounded-br-sm" 
+                      : "bg-white/5 text-slate-200 border border-white/10 rounded-bl-sm backdrop-blur-sm"
                   }`}>
                     {item.text}
                   </div>
-                </div>
+                </motion.div>
               ))}
               <div ref={chatScrollRef} />
             </div>
 
-            <div className="p-4 bg-slate-950 border-t border-slate-800">
-              <form onSubmit={handleChatSubmit} className="flex gap-3">
+            <div className="p-5 bg-[#020617]/90 backdrop-blur-md border-t border-white/5">
+              <form onSubmit={handleChatSubmit} className="flex gap-3 relative">
                 <input
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Inquire on target matrix, FSSAI regulations, dielectric dispersion…"
-                  className="flex-1 bg-slate-900 border border-slate-700 focus:border-cyan-500 rounded-2xl px-5 py-3 text-sm text-white outline-none transition-colors"
+                  placeholder="Inquire about matrix data, FSSAI regulations..."
+                  className="flex-1 bg-white/5 border border-white/10 focus:border-cyan-500/50 focus:bg-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none transition-all placeholder:text-slate-500"
                 />
-                <button type="submit" disabled={!chatInput.trim()} className="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 text-white p-3.5 rounded-2xl transition-all shadow-lg">
-                  <Send className="w-5 h-5" />
+                <button 
+                  type="submit" 
+                  disabled={!chatInput.trim()} 
+                  className="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 disabled:hover:bg-cyan-600 text-white px-6 rounded-2xl transition-all shadow-lg flex items-center justify-center group"
+                >
+                  <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                 </button>
               </form>
             </div>
-          </div>
+          </motion.div>
         )}
       </main>
     </div>
