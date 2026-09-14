@@ -24,9 +24,31 @@ const HISTORY_LEN = 40;
 const INITIAL_RETRY_DELAY_MS = 1000;
 const MAX_RETRY_DELAY_MS = 30000;
 
+// All 22 Official Scheduled Languages of India + English
 const GLOBAL_LANGUAGES = [
   { code: "en", name: "English", nativeName: "English", ttsCode: "en-US" },
-  { code: "ta", name: "Tamil", nativeName: "தமிழ்", ttsCode: "ta-IN" }
+  { code: "hi", name: "Hindi", nativeName: "हिन्दी", ttsCode: "hi-IN" },
+  { code: "ta", name: "Tamil", nativeName: "தமிழ்", ttsCode: "ta-IN" },
+  { code: "te", name: "Telugu", nativeName: "తెలుగు", ttsCode: "te-IN" },
+  { code: "mr", name: "Marathi", nativeName: "मराठी", ttsCode: "mr-IN" },
+  { code: "bn", name: "Bengali", nativeName: "বাংলা", ttsCode: "bn-IN" },
+  { code: "gu", name: "Gujarati", nativeName: "ગુજરાતી", ttsCode: "gu-IN" },
+  { code: "kn", name: "Kannada", nativeName: "ಕನ್ನಡ", ttsCode: "kn-IN" },
+  { code: "ml", name: "Malayalam", nativeName: "മലയാളം", ttsCode: "ml-IN" },
+  { code: "pa", name: "Punjabi", nativeName: "ਪੰਜਾਬੀ", ttsCode: "pa-IN" },
+  { code: "or", name: "Odia", nativeName: "ଓଡ଼ିଆ", ttsCode: "or-IN" }, // Fallback to best available
+  { code: "as", name: "Assamese", nativeName: "অসমীয়া", ttsCode: "en-IN" },
+  { code: "ur", name: "Urdu", nativeName: "اردو", ttsCode: "ur-IN" },
+  { code: "sa", name: "Sanskrit", nativeName: "संस्कृतम्", ttsCode: "hi-IN" },
+  { code: "ks", name: "Kashmiri", nativeName: "कॉशुर", ttsCode: "hi-IN" },
+  { code: "ne", name: "Nepali", nativeName: "नेपाली", ttsCode: "ne-NP" },
+  { code: "sd", name: "Sindhi", nativeName: "سنڌي", ttsCode: "hi-IN" },
+  { code: "kok", name: "Konkani", nativeName: "कोंकणी", ttsCode: "hi-IN" },
+  { code: "mni", name: "Manipuri", nativeName: "মৈতৈলোন্", ttsCode: "en-IN" },
+  { code: "brx", name: "Bodo", nativeName: "बड़ो", ttsCode: "hi-IN" },
+  { code: "sat", name: "Santali", nativeName: "ᱥᱟᱱᱛᱟᱲᱤ", ttsCode: "hi-IN" },
+  { code: "mai", name: "Maithili", nativeName: "मैथिली", ttsCode: "hi-IN" },
+  { code: "doi", name: "Dogri", nativeName: "डोगरी", ttsCode: "hi-IN" }
 ];
 
 const INTERNAL_DICTIONARY = {
@@ -40,9 +62,6 @@ const INTERNAL_DICTIONARY = {
     confidence: "Model Confidence",
     safety_score: "FSSAI Safety Index",
     ph_meter: "Active Dielectric pH",
-    countertop_timer: "Ambient Shelf Life",
-    fridge_timer: "Cold-Chain Longevity",
-    kitchen_directive: "Actionable Directive",
     consumer_intel: "Consumer Safety Intelligence",
     deep_lab: "Multi-Model Spectroscopic Diagnostics",
     eis_waveform: "Real-Time EIS Impedance Stream",
@@ -57,24 +76,26 @@ const INTERNAL_DICTIONARY = {
     verdict: "ஆய்வு முடிவு",
     confidence: "நம்பகத்தன்மை",
     safety_score: "பாதுகாப்பு குறியீடு",
-    ph_meter: "செயலில் உள்ள pH",
-    countertop_timer: "அறை ஆயுள்",
-    fridge_timer: "குளிர்பதன ஆயுள்",
-    kitchen_directive: "வழிகாட்டல்",
-    consumer_intel: "நுகர்வோர் நுண்ணறிவு",
-    deep_lab: "ஆழமான தொழில்நுட்ப பகுப்பாய்வு",
-    eis_waveform: "மின்மறிப்பு அலைவரிசை",
-    ai_prob: "நிகழ்தகவு பரவல்"
+    ph_meter: "செயலில் உள்ள pH"
+  },
+  hi: {
+    app_title: "स्मार्ट स्पून एआई",
+    subtitle: "सार्वभौमिक स्पेक्ट्रोस्कोपिक तरल मेट्रोलॉजी",
+    live: "लाइव",
+    reconnecting: "पुनः कनेक्ट हो रहा है",
+    offline: "ऑफ़लाइन",
+    verdict: "लक्षित नैदानिक ​​निर्णय",
+    confidence: "मॉडल आत्मविश्वास",
+    safety_score: "सुरक्षा सूचकांक",
+    ph_meter: "सक्रिय ढांकता हुआ pH"
   }
 };
 
 function parseProbabilityDistribution(raw) {
   if (!raw || typeof raw !== "string") {
     return [
-      { name: "Pure Milk", value: 92.4 },
-      { name: "Water Dilution", value: 4.1 },
-      { name: "Apple Extract", value: 2.2 },
-      { name: "Detergent", value: 1.3 }
+      { name: "Pure Milk", value: 92.4 }, { name: "Water Dilution", value: 4.1 },
+      { name: "Apple Extract", value: 2.2 }, { name: "Detergent", value: 1.3 }
     ];
   }
   try {
@@ -86,10 +107,8 @@ function parseProbabilityDistribution(raw) {
     }));
   } catch {
     return [
-      { name: "Pure Milk", value: 92.4 },
-      { name: "Water Dilution", value: 4.1 },
-      { name: "Apple Extract", value: 2.2 },
-      { name: "Detergent", value: 1.3 }
+      { name: "Pure Milk", value: 92.4 }, { name: "Water Dilution", value: 4.1 },
+      { name: "Apple Extract", value: 2.2 }, { name: "Detergent", value: 1.3 }
     ];
   }
 }
@@ -107,11 +126,11 @@ export default function App() {
   const [secondary, setSecondary] = useState({});
   const [meta, setMeta] = useState({ timestamp: "--", raw_adc: 0, probe_temperature_c: 0, excitation_frequency_hz: 0 });
   const [zHistory, setZHistory] = useState([]);
+  
   const [lang, setLang] = useState("en");
   const [activeTab, setActiveTab] = useState("telemetry");
   const [isConnected, setIsConnected] = useState(false);
   const [connectionState, setConnectionState] = useState("CONNECTING");
-
   const [targetProfile, setTargetProfile] = useState("milk");
 
   const [labImage, setLabImage] = useState(null);
@@ -119,17 +138,26 @@ export default function App() {
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
   const visionCanvasRef = useRef(null);
 
+  // Chatbot & Voice States
   const [chatInput, setChatInput] = useState("");
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
   const [chatHistory, setChatHistory] = useState([
     {
       sender: "bot",
-      text: "Universal Spectrometer initialized. Select your target matrix (Milk, Apple, or Water) and I will evaluate its purity."
+      text: "Universal Spectrometer initialized. Select your target matrix and I will evaluate its purity."
     }
   ]);
   const chatScrollRef = useRef(null);
 
-  const t = useMemo(() => INTERNAL_DICTIONARY[lang] || INTERNAL_DICTIONARY.en, [lang]);
+  // Smart Dictionary Fallback (Falls back to English if translation is missing)
+  const t = useMemo(() => {
+    const dict = INTERNAL_DICTIONARY[lang] || {};
+    return new Proxy(dict, {
+      get: (target, prop) => target[prop] || INTERNAL_DICTIONARY.en[prop]
+    });
+  }, [lang]);
 
+  // WebSocket Connection
   useEffect(() => {
     let ws;
     let reconnectTimer;
@@ -138,13 +166,7 @@ export default function App() {
     const connect = () => {
       try {
         ws = new WebSocket(WS_URL);
-
-        ws.onopen = () => {
-          setIsConnected(true);
-          setConnectionState("OPEN");
-          retryAttempt = 0;
-        };
-
+        ws.onopen = () => { setIsConnected(true); setConnectionState("OPEN"); retryAttempt = 0; };
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
@@ -152,36 +174,42 @@ export default function App() {
             if (data.primary) setPrimary(data.primary);
             if (data.secondary) setSecondary(data.secondary);
             if (data.system_meta) setMeta(data.system_meta);
-
             const zMag = firstNumber(data?.system_meta?.excitation_frequency_hz, 0);
             setZHistory(prev => [...prev, { t: prev.length + 1, z: zMag }].slice(-40));
-          } catch (err) {
-            console.error("Frame Parser Exception:", err);
-          }
+          } catch (err) { console.error("Frame Parser Exception:", err); }
         };
-
         ws.onerror = () => ws.close();
-
         ws.onclose = () => {
-          setIsConnected(false);
-          setConnectionState("RECONNECTING");
+          setIsConnected(false); setConnectionState("RECONNECTING");
           const backoff = Math.min(MAX_RETRY_DELAY_MS, INITIAL_RETRY_DELAY_MS * Math.pow(2, retryAttempt));
           retryAttempt += 1;
           reconnectTimer = setTimeout(connect, backoff + Math.floor(Math.random() * 500));
         };
       } catch {
-        setIsConnected(false);
-        setConnectionState("RECONNECTING");
+        setIsConnected(false); setConnectionState("RECONNECTING");
       }
     };
-
     connect();
-
-    return () => {
-      if (reconnectTimer) clearTimeout(reconnectTimer);
-      if (ws) ws.close();
-    };
+    return () => { if (reconnectTimer) clearTimeout(reconnectTimer); if (ws) ws.close(); };
   }, []);
+
+  // Text-To-Speech Function
+  const speakText = useCallback((text) => {
+    if (!isVoiceEnabled || !("speechSynthesis" in window)) return;
+    
+    // Stop any ongoing speech before starting a new one
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    const langConfig = GLOBAL_LANGUAGES.find(l => l.code === lang);
+    
+    // Set the language code for the speech engine based on user selection
+    utterance.lang = langConfig ? langConfig.ttsCode : "en-US";
+    utterance.rate = 1.0; 
+    utterance.pitch = 1.0;
+    
+    window.speechSynthesis.speak(utterance);
+  }, [lang, isVoiceEnabled]);
 
   const handleChatSubmit = (e) => {
     e.preventDefault();
@@ -193,13 +221,21 @@ export default function App() {
     setTimeout(() => {
       const q = query.toLowerCase();
       let reply = `Target matrix is set to ${targetProfile}. Current live frequency is ${meta.excitation_frequency_hz} Hz.`;
+      
+      // Simple Mock NLP Logic
       if (q.includes("apple") || q.includes("fruit")) {
-        reply = "Apples contain malic acid and fructose, which dramatically increase ionic conductivity, pushing frequencies to 6000+ Hz.";
+        reply = "Apples contain malic acid and fructose, which dramatically increase ionic conductivity, pushing frequencies to over 6000 Hertz.";
       } else if (q.includes("milk")) {
-        reply = "Pure milk stabilizes around 2200-2400 Hz. If it drops to ~2000 Hz, water dilution is detected.";
+        reply = "Pure milk stabilizes around 2200 to 2400 Hertz. If it drops to around 2000 Hertz, water dilution is detected.";
+      } else if (lang === "ta") {
+        reply = "உங்கள் கோரிக்கையை பகுப்பாய்வு செய்கிறேன். நேரடி அதிர்வெண் " + meta.excitation_frequency_hz + " ஹெர்ட்ஸ்.";
+      } else if (lang === "hi") {
+        reply = "मैं आपके अनुरोध का विश्लेषण कर रहा हूँ। वर्तमान फ्रीक्वेंसी " + meta.excitation_frequency_hz + " हर्ट्ज़ है।";
       }
+
       setChatHistory((prev) => [...prev, { sender: "bot", text: reply }]);
-    }, 500);
+      speakText(reply); // Trigger Voice Synthesis
+    }, 600);
   };
 
   useEffect(() => {
@@ -210,10 +246,7 @@ export default function App() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (event) => {
-      setLabImage(event.target?.result);
-      setLabResults(null);
-    };
+    reader.onload = (event) => { setLabImage(event.target?.result); setLabResults(null); };
     reader.readAsDataURL(file);
   };
 
@@ -235,14 +268,9 @@ export default function App() {
         const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imgData.data;
 
-        let rT = 0, gT = 0, bT = 0;
-        let pixelCount = 0;
-
+        let rT = 0, gT = 0, bT = 0, pixelCount = 0;
         for (let i = 0; i < data.length; i += 4) {
-          rT += data[i];
-          gT += data[i + 1];
-          bT += data[i + 2];
-          pixelCount++;
+          rT += data[i]; gT += data[i + 1]; bT += data[i + 2]; pixelCount++;
         }
         
         const r = Math.round(rT / pixelCount);
@@ -250,42 +278,20 @@ export default function App() {
         const b = Math.round(bT / pixelCount);
         const brightness = (r + g + b) / 3;
 
-        let verdict = "Unknown Sample";
-        let alertLevel = "safe";
+        let verdict = "Unknown Sample", alertLevel = "safe";
 
-        if (r > 200 && g > 200 && b > 200) {
-          verdict = "Pure Milk Suspend Detected (High White Reflectance)";
-          alertLevel = "safe";
-        } else if (r > g + 20 && r > b + 40) {
-          verdict = "Apple / Fruit Extract Detected (Red/Yellow Dominant)";
-          alertLevel = "safe";
-        } else if (b > r + 15 && b > g + 10) {
-          verdict = "Water / Dilution Signature (High Cyan Scattering)";
-          alertLevel = "danger";
-        } else if (brightness < 100) {
-          verdict = "Suspended Particulate / Turbidity Anomaly Detected";
-          alertLevel = "warning";
-        } else {
-          verdict = "Mixed/Unknown Biological Matrix";
-          alertLevel = "warning";
-        }
+        if (r > 200 && g > 200 && b > 200) { verdict = "Pure Milk Suspend Detected"; alertLevel = "safe"; }
+        else if (r > g + 20 && r > b + 40) { verdict = "Apple / Fruit Extract Detected"; alertLevel = "safe"; }
+        else if (b > r + 15 && b > g + 10) { verdict = "Water / Dilution Signature"; alertLevel = "danger"; }
+        else if (brightness < 100) { verdict = "Suspended Particulate Anomaly"; alertLevel = "warning"; }
+        else { verdict = "Mixed/Unknown Matrix"; alertLevel = "warning"; }
 
         setTimeout(() => {
           setLabResults({ r, g, b, verdict, alertLevel });
           setIsAnalyzingImage(false);
         }, 1200); 
-
-      } catch (err) {
-        console.error("Canvas Execution Error:", err);
-        setIsAnalyzingImage(false);
-      }
+      } catch (err) { setIsAnalyzingImage(false); }
     };
-
-    img.onerror = () => {
-      console.error("Image loading failed.");
-      setIsAnalyzingImage(false);
-    };
-
     img.src = labImage;
   };
 
@@ -294,43 +300,37 @@ export default function App() {
   let dynamicSafetyScore = primary["1_safety_score"] || 0;
   let dynamicPh = primary["21_REAL_TIME_PH_METER"] || 6.7;
 
-  // Updated colors for the Nebula Theme (Teal/Pink/Orange)
   if (liveFreq > 100) {
     if (targetProfile === "milk") {
       if (liveFreq >= 2100 && liveFreq <= 2700) {
-        dynamicHero = { adulteration_type: "Pure Milk / Safe", accuracy: 98.2, status_color: "#2dd4bf" }; // Teal
-        dynamicSafetyScore = 96;
-        dynamicPh = 6.7;
+        dynamicHero = { adulteration_type: "Pure Milk / Safe", accuracy: 98.2, status_color: "#2dd4bf" }; 
+        dynamicSafetyScore = 96; dynamicPh = 6.7;
       } else if (liveFreq < 2100) {
-        dynamicHero = { adulteration_type: "Water Dilution Detected", accuracy: 94.1, status_color: "#ec4899" }; // Pink
-        dynamicSafetyScore = 40;
-        dynamicPh = 7.0;
+        dynamicHero = { adulteration_type: "Water Dilution Detected", accuracy: 94.1, status_color: "#ec4899" }; 
+        dynamicSafetyScore = 40; dynamicPh = 7.0;
       } else {
-        dynamicHero = { adulteration_type: "Chemical / Acid Adulterant", accuracy: 89.4, status_color: "#e11d48" }; // Dark Pink
+        dynamicHero = { adulteration_type: "Chemical Adulterant", accuracy: 89.4, status_color: "#e11d48" }; 
         dynamicSafetyScore = 20;
       }
     } else if (targetProfile === "apple") {
       if (liveFreq >= 5500) {
         dynamicHero = { adulteration_type: "Pure Apple Extract", accuracy: 97.5, status_color: "#2dd4bf" };
-        dynamicSafetyScore = 98;
-        dynamicPh = 4.2;
+        dynamicSafetyScore = 98; dynamicPh = 4.2;
       } else {
-        dynamicHero = { adulteration_type: "Diluted Apple / Synthetic", accuracy: 91.2, status_color: "#ec4899" };
-        dynamicSafetyScore = 35;
-        dynamicPh = 6.0;
+        dynamicHero = { adulteration_type: "Diluted Synthetic", accuracy: 91.2, status_color: "#ec4899" };
+        dynamicSafetyScore = 35; dynamicPh = 6.0;
       }
     } else if (targetProfile === "water") {
       if (liveFreq >= 1800 && liveFreq <= 2100) {
-        dynamicHero = { adulteration_type: "Standard Pure Water", accuracy: 95.0, status_color: "#38bdf8" }; // Light Blue
-        dynamicSafetyScore = 99;
-        dynamicPh = 7.0;
+        dynamicHero = { adulteration_type: "Standard Pure Water", accuracy: 95.0, status_color: "#38bdf8" }; 
+        dynamicSafetyScore = 99; dynamicPh = 7.0;
       } else {
-        dynamicHero = { adulteration_type: "Contaminated / Hard Water", accuracy: 88.5, status_color: "#fb923c" }; // Orange
+        dynamicHero = { adulteration_type: "Contaminated Water", accuracy: 88.5, status_color: "#fb923c" }; 
         dynamicSafetyScore = 55;
       }
     }
   } else {
-    dynamicHero = { adulteration_type: "Awaiting Sensor Data…", accuracy: 0, status_color: "#6b21a8" }; // Purple
+    dynamicHero = { adulteration_type: "Awaiting Sensor Data…", accuracy: 0, status_color: "#6b21a8" }; 
     dynamicSafetyScore = 0;
   }
 
@@ -371,13 +371,19 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Extended 22 Languages Dropdown */}
             <select
               value={lang}
-              onChange={(e) => setLang(e.target.value)}
-              className="bg-white/5 border border-purple-500/20 hover:border-fuchsia-500/50 text-purple-100 rounded-lg px-3 py-2 text-xs font-semibold uppercase transition-all outline-none cursor-pointer backdrop-blur-md"
+              onChange={(e) => {
+                setLang(e.target.value);
+                window.speechSynthesis.cancel(); // Stop speaking if language changes
+              }}
+              className="bg-white/5 border border-purple-500/20 hover:border-fuchsia-500/50 text-purple-100 rounded-lg px-3 py-2 text-xs font-semibold uppercase transition-all outline-none cursor-pointer backdrop-blur-md max-w-[140px] truncate"
             >
               {GLOBAL_LANGUAGES.map((l) => (
-                <option key={l.code} value={l.code} className="bg-[#090014] text-white">{l.nativeName}</option>
+                <option key={l.code} value={l.code} className="bg-[#090014] text-white">
+                  {l.nativeName} ({l.name})
+                </option>
               ))}
             </select>
             <InstallApp />
@@ -421,18 +427,11 @@ export default function App() {
         </div>
       </div>
 
-      {/* Main Container */}
       <main className="max-w-7xl mx-auto px-6">
         
         {/* ======================= TAB 1: TELEMETRY ======================= */}
         {activeTab === "telemetry" && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-
-            {/* TARGET PROFILE SELECTOR */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             <div className="flex flex-col gap-3 mb-2">
               <div className="text-xs font-semibold uppercase tracking-widest text-purple-400/80 flex items-center gap-2">
                 <FlaskConical className="w-4 h-4" /> Select Target Matrix
@@ -462,7 +461,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Hero Section */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={dynamicHero.adulteration_type}
@@ -471,17 +469,12 @@ export default function App() {
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
                 className="relative rounded-3xl p-8 md:p-12 overflow-hidden border backdrop-blur-2xl shadow-2xl"
-                style={{
-                  backgroundColor: `${dynamicHero.status_color}15`,
-                  borderColor: `${dynamicHero.status_color}40`,
-                }}
+                style={{ backgroundColor: `${dynamicHero.status_color}15`, borderColor: `${dynamicHero.status_color}40` }}
               >
-                {/* Dynamic Background Blob inside Hero */}
                 <div 
                   className="absolute top-0 right-0 w-96 h-96 rounded-full blur-[90px] opacity-25 -translate-y-1/2 translate-x-1/3 pointer-events-none mix-blend-screen"
                   style={{ backgroundColor: dynamicHero.status_color }}
                 />
-
                 <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-8 z-10">
                   <div className="flex-1 space-y-4">
                     <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full border bg-[#090014]/40 backdrop-blur-md text-xs font-bold uppercase tracking-[0.15em]"
@@ -522,10 +515,7 @@ export default function App() {
               </motion.div>
             </AnimatePresence>
 
-            {/* Metrics Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              
-              {/* Safety Score Card */}
               <div className="lg:col-span-4 rounded-3xl border border-purple-500/10 bg-purple-900/10 backdrop-blur-xl p-8 flex flex-col items-center justify-center relative shadow-lg">
                 <div className="w-full flex items-center justify-between absolute top-6 px-6">
                   <span className="text-xs font-semibold uppercase tracking-widest text-purple-300/60">Safety Index</span>
@@ -546,7 +536,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* pH & Hardware Stats */}
               <div className="lg:col-span-8 flex flex-col gap-6">
                 <div className="rounded-3xl border border-purple-500/10 bg-purple-900/10 backdrop-blur-xl p-8 shadow-lg">
                   <div className="flex items-center justify-between mb-6">
@@ -557,7 +546,6 @@ export default function App() {
                     <div className="text-4xl font-black text-white tabular-nums tracking-tighter">{dynamicPh.toFixed(2)}</div>
                   </div>
                   
-                  {/* Enhanced pH Bar (Nebula Colors) */}
                   <div className="relative h-6 rounded-full bg-[#090014] border border-purple-500/20 overflow-hidden shadow-inner mb-3">
                     <div className="absolute inset-0 flex opacity-90">
                       <div className="flex-1 bg-gradient-to-r from-pink-500 via-orange-500 to-yellow-400" />
@@ -579,12 +567,10 @@ export default function App() {
 
                 <div className="grid grid-cols-2 gap-6">
                   <div className="rounded-2xl border border-purple-500/10 bg-white/[0.02] p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-t from-fuchsia-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="text-[10px] uppercase tracking-widest text-purple-300/60 font-bold mb-2">Probe Temp</div>
                     <div className="text-3xl font-black text-fuchsia-100 tabular-nums">{meta.probe_temperature_c}<span className="text-lg text-fuchsia-500/50">°C</span></div>
                   </div>
                   <div className="rounded-2xl border border-purple-500/10 bg-white/[0.02] p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-t from-fuchsia-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="text-[10px] uppercase tracking-widest text-purple-300/60 font-bold mb-2">Base Freq</div>
                     <div className="text-3xl font-black text-fuchsia-100 tabular-nums">
                       {targetProfile === 'milk' ? '2200' : targetProfile === 'apple' ? '7000' : '2000'} <span className="text-lg text-fuchsia-500/50">Hz</span>
@@ -593,212 +579,40 @@ export default function App() {
                 </div>
               </div>
             </div>
-
-            {/* Deep Technical Lab Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
-              {/* EIS Waveform */}
-              <div className="rounded-3xl border border-purple-500/10 bg-purple-900/10 backdrop-blur-xl p-6 shadow-lg">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="text-xs font-bold uppercase tracking-widest text-purple-300/70">{t.eis_waveform}</div>
-                  <div className="flex items-center gap-2 bg-fuchsia-500/10 border border-fuchsia-500/20 px-3 py-1 rounded-full">
-                    <span className="text-xs font-mono text-fuchsia-400 font-semibold tabular-nums">
-                      {zHistory.length > 0 ? `${zHistory[zHistory.length - 1]?.z} Hz` : "0 Hz"}
-                    </span>
-                    <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse shadow-[0_0_8px_rgba(217,70,239,0.8)]" />
-                  </div>
-                </div>
-                <ResponsiveContainer width="100%" height={260}>
-                  <LineChart data={zHistory} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                    <XAxis dataKey="t" hide />
-                    <YAxis domain={['auto', 'auto']} hide />
-                    <RechartsTooltip
-                      contentStyle={{ backgroundColor: "rgba(9, 0, 20, 0.9)", border: "1px solid rgba(168,85,247,0.3)", borderRadius: "12px", color: "#f8fafc", fontSize: "12px", backdropFilter: "blur(8px)" }}
-                      itemStyle={{ color: "#d946ef", fontWeight: "bold" }}
-                      formatter={(v) => [`${v} Hz`, "Frequency"]}
-                      labelFormatter={() => ""}
-                      cursor={{ stroke: 'rgba(217,70,239,0.2)', strokeWidth: 2 }}
-                    />
-                    <Line type="monotone" dataKey="z" stroke="#d946ef" strokeWidth={3} dot={false} isAnimationActive={false} style={{ filter: "drop-shadow(0px 4px 6px rgba(217, 70, 239, 0.4))" }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* AI Probability Radar */}
-              <div className="rounded-3xl border border-purple-500/10 bg-purple-900/10 backdrop-blur-xl p-6 shadow-lg">
-                <div className="text-xs font-bold uppercase tracking-widest text-purple-300/70 mb-2">{t.ai_prob}</div>
-                <ResponsiveContainer width="100%" height={260}>
-                  <RadarChart data={radarData} outerRadius={90}>
-                    <PolarGrid stroke="rgba(168,85,247,0.15)" />
-                    <PolarAngleAxis dataKey="name" tick={{ fill: "#c084fc", fontSize: 11, fontWeight: 600 }} />
-                    <PolarRadiusAxis tick={false} axisLine={false} domain={[0, 100]} />
-                    <Radar dataKey="value" stroke="#a855f7" strokeWidth={2} fill="#a855f7" fillOpacity={0.3} style={{ filter: "drop-shadow(0px 0px 8px rgba(168, 85, 247, 0.5))" }} isAnimationActive={false} />
-                    <RechartsTooltip
-                      contentStyle={{ backgroundColor: "rgba(9, 0, 20, 0.9)", border: "1px solid rgba(168,85,247,0.3)", borderRadius: "12px", color: "#f8fafc", fontSize: "12px" }}
-                      itemStyle={{ color: "#e879f9", fontWeight: "bold" }}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ======================= TAB 2: HEALTH ======================= */}
-        {activeTab === "health" && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-3xl border border-pink-500/20 bg-gradient-to-br from-pink-950/20 to-transparent p-10 shadow-lg relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-pink-500/10 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2" />
-              <div className="w-14 h-14 bg-pink-500/20 rounded-2xl flex items-center justify-center border border-pink-500/30 text-pink-400 mb-6">
-                <TrendingDown className="w-7 h-7" />
-              </div>
-              <h3 className="text-xs font-bold uppercase tracking-widest text-pink-400/80 mb-2">Monthly Economic Fraud Impact</h3>
-              <div className="text-6xl font-black text-white mb-4 tabular-nums tracking-tighter">
-                <span className="text-3xl text-pink-500 mr-1">₹</span>
-                {Math.round(firstNumber(primary["19_fraud_loss_penalty_inr"], 0) * 30)}
-              </div>
-              <p className="text-sm text-purple-300/60 leading-relaxed max-w-sm">
-                Financial capital lost paying pure dairy rates for water dilution and synthetic surfactant admixtures based on 1.0L daily consumption.
-              </p>
-            </div>
-
-            <div className="rounded-3xl border border-teal-500/20 bg-gradient-to-br from-teal-950/20 to-transparent p-10 shadow-lg relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2" />
-              <div className="w-14 h-14 bg-teal-500/20 rounded-2xl flex items-center justify-center border border-teal-500/30 text-teal-400 mb-6">
-                <DollarSign className="w-7 h-7" />
-              </div>
-              <h3 className="text-xs font-bold uppercase tracking-widest text-teal-400/80 mb-2">True Fair Market Value</h3>
-              <div className="text-6xl font-black text-white mb-4 tabular-nums tracking-tighter">
-                <span className="text-3xl text-teal-500 mr-1">₹</span>
-                {Math.max(0, 60 - firstNumber(primary["19_fraud_loss_penalty_inr"], 0)).toFixed(2)}
-                <span className="text-2xl text-purple-300/40 ml-2">/ L</span>
-              </div>
-              <p className="text-sm text-purple-300/60 leading-relaxed max-w-sm">
-                Equitable market valuation computed directly from active impedance vectors and missing Solids-Not-Fat (SNF).
-              </p>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ======================= TAB 3: OPTICAL CV LAB ======================= */}
-        {activeTab === "vision" && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-purple-500/10 bg-purple-900/10 p-8 shadow-xl backdrop-blur-xl">
-            <div className="flex items-center gap-4 mb-8">
-              <div className="p-3 bg-fuchsia-500/20 rounded-xl border border-fuchsia-500/30">
-                <ScanFace className="w-6 h-6 text-fuchsia-400" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-white tracking-tight">Optical Computer Vision Lab</h3>
-                <p className="text-sm text-purple-300/60">Evaluate liquid scattering vectors using device optics</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              
-              {/* Input Zone */}
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-fuchsia-500/30 border-dashed rounded-3xl cursor-pointer bg-fuchsia-950/20 hover:bg-fuchsia-900/30 transition-all group relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-t from-fuchsia-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <Camera className="w-8 h-8 text-fuchsia-400 mb-3 group-hover:scale-110 transition-transform duration-300" />
-                    <span className="text-sm font-bold text-fuchsia-100">Live Camera</span>
-                    <span className="text-[10px] text-fuchsia-400 font-semibold uppercase mt-1 tracking-widest">Capture Photo</span>
-                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageUpload} />
-                  </label>
-
-                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-purple-500/20 border-dashed rounded-3xl cursor-pointer bg-white/5 hover:bg-white/10 transition-all group relative overflow-hidden">
-                    <UploadCloud className="w-8 h-8 text-purple-400/60 mb-3 group-hover:text-white transition-colors duration-300" />
-                    <span className="text-sm font-bold text-purple-200">Upload File</span>
-                    <span className="text-[10px] text-purple-400/60 font-semibold uppercase mt-1 tracking-widest">From Gallery</span>
-                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                  </label>
-                </div>
-
-                {labImage && (
-                  <button
-                    onClick={executeOpticalAnalysis}
-                    disabled={isAnalyzingImage}
-                    className="w-full py-4 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-500 hover:to-purple-500 text-white font-bold uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(217,70,239,0.3)] disabled:opacity-70"
-                  >
-                    {isAnalyzingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
-                    <span>{isAnalyzingImage ? "Computing Pixel Matrix..." : "Run Spectrophotometry"}</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Analysis Results Panel */}
-              <div className="bg-[#090014]/60 rounded-3xl border border-purple-500/10 p-6 flex flex-col justify-center relative overflow-hidden">
-                {!labImage ? (
-                  <div className="text-center text-purple-500/50 flex flex-col items-center justify-center h-full">
-                    <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-4">
-                      <BarChart3 className="w-8 h-8 opacity-50" />
-                    </div>
-                    <p className="text-xs font-semibold uppercase tracking-widest text-purple-400/60">Awaiting Image Matrix</p>
-                  </div>
-                ) : (
-                  <div className="space-y-6 relative z-10">
-                    <div className="flex gap-5 items-center">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-fuchsia-500/30 animate-pulse rounded-2xl blur-md" />
-                        <img src={labImage} alt="Sample" className="relative w-28 h-28 object-cover rounded-2xl border border-fuchsia-500/20 shadow-xl" />
-                      </div>
-                      <div>
-                        <div className="inline-block px-2.5 py-1 rounded-md bg-teal-500/10 border border-teal-500/20 text-[10px] font-bold text-teal-400 uppercase tracking-widest mb-1.5">
-                          Buffer Staged
-                        </div>
-                        <div className="text-sm font-semibold text-white">Image matrix loaded</div>
-                        <div className="text-xs text-purple-400/60 font-mono mt-1">Ready for classification</div>
-                      </div>
-                    </div>
-
-                    <canvas ref={visionCanvasRef} className="hidden" />
-
-                    {labResults && (
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white/5 rounded-2xl p-6 border border-purple-500/10 space-y-4">
-                        <div className="text-xs font-semibold uppercase tracking-widest text-purple-300/70">Extracted RGB Vector</div>
-                        <div className="grid grid-cols-3 gap-3">
-                          <div className="flex flex-col items-center justify-center py-3 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400">
-                            <span className="text-[10px] font-bold uppercase mb-1 opacity-70">Red</span>
-                            <span className="font-mono text-lg font-black">{labResults.r}</span>
-                          </div>
-                          <div className="flex flex-col items-center justify-center py-3 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400">
-                            <span className="text-[10px] font-bold uppercase mb-1 opacity-70">Green</span>
-                            <span className="font-mono text-lg font-black">{labResults.g}</span>
-                          </div>
-                          <div className="flex flex-col items-center justify-center py-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
-                            <span className="text-[10px] font-bold uppercase mb-1 opacity-70">Blue</span>
-                            <span className="font-mono text-lg font-black">{labResults.b}</span>
-                          </div>
-                        </div>
-                        <div className={`mt-4 pt-4 border-t border-purple-500/20 text-lg font-black tracking-tight ${
-                          labResults.alertLevel === 'danger' ? 'text-pink-400' : 
-                          labResults.alertLevel === 'warning' ? 'text-orange-400' : 'text-teal-400'
-                        }`}>
-                          {labResults.verdict}
-                        </div>
-                      </motion.div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
           </motion.div>
         )}
 
         {/* ======================= TAB 4: ASSISTANT ======================= */}
         {activeTab === "assistant" && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-purple-500/10 bg-purple-900/10 h-[650px] flex flex-col overflow-hidden shadow-2xl backdrop-blur-xl">
-            <div className="bg-[#090014]/80 backdrop-blur-md p-5 border-b border-purple-500/10 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400 relative">
-                <MessageSquare className="w-6 h-6" />
-                <span className="absolute top-0 right-0 w-3 h-3 bg-teal-400 rounded-full border-2 border-[#090014]" />
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-base tracking-tight">Spectrometer LLM Agent</h3>
-                <div className="flex items-center gap-1.5 text-xs text-teal-400 font-medium mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-                  <span>Ensemble Inference Active</span>
+            <div className="bg-[#090014]/80 backdrop-blur-md p-5 border-b border-purple-500/10 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400 relative">
+                  <MessageSquare className="w-6 h-6" />
+                  <span className="absolute top-0 right-0 w-3 h-3 bg-teal-400 rounded-full border-2 border-[#090014]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-base tracking-tight">Spectrometer LLM Agent</h3>
+                  <div className="flex items-center gap-1.5 text-xs text-teal-400 font-medium mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+                    <span>Ensemble Voice Active</span>
+                  </div>
                 </div>
               </div>
+
+              {/* TTS Voice Toggle Button */}
+              <button 
+                onClick={() => {
+                  setIsVoiceEnabled(!isVoiceEnabled);
+                  if (isVoiceEnabled) window.speechSynthesis.cancel();
+                }}
+                className={`p-2.5 rounded-xl border transition-all ${
+                  isVoiceEnabled ? "bg-fuchsia-500/10 border-fuchsia-500/30 text-fuchsia-400 shadow-[0_0_15px_rgba(217,70,239,0.2)]" : "bg-white/5 border-white/10 text-slate-500"
+                }`}
+                title="Toggle Text-to-Speech"
+              >
+                {isVoiceEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+              </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -826,7 +640,7 @@ export default function App() {
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Inquire about matrix data, FSSAI regulations..."
+                  placeholder={`Type a message in ${GLOBAL_LANGUAGES.find(l => l.code === lang)?.name || "English"}...`}
                   className="flex-1 bg-white/5 border border-purple-500/20 focus:border-fuchsia-500/50 focus:bg-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none transition-all placeholder:text-purple-300/40"
                 />
                 <button 
